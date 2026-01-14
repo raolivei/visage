@@ -2,7 +2,7 @@
 # Multi-stage build for Next.js standalone output
 
 # Dependencies stage
-FROM node:20-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 
 # Install dependencies
@@ -10,7 +10,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 # Builder stage
-FROM node:20-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -24,7 +24,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 
 # Create non-root user
