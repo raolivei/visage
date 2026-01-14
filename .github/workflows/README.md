@@ -77,16 +77,20 @@ Comprehensive security scanning for vulnerabilities.
 | Pull request #42      | `pr-42` (build only, no push)   |
 | Manual with tag input | Custom tag                      |
 
-## Required Secrets
+## Authentication
 
-| Secret   | Description                                    |
-| -------- | ---------------------------------------------- |
-| `CR_PAT` | GitHub Container Registry Personal Access Token |
+The workflows use the built-in `GITHUB_TOKEN` for pushing images to GHCR. This token:
+- Never expires
+- Is automatically provided by GitHub Actions
+- Has `packages:write` permission when workflow write access is enabled
 
-**Creating `CR_PAT`:**
-1. Go to GitHub Settings → Developer settings → Personal access tokens
-2. Create a new token with scopes: `write:packages`, `read:packages`
-3. Add it as a repository secret named `CR_PAT`
+**Required Repository Settings:**
+
+1. Go to **Settings → Actions → General → Workflow permissions**
+2. Select **"Read and write permissions"**
+3. (Optional) Check "Allow GitHub Actions to create and approve pull requests"
+
+No manual secrets or PAT rotation required.
 
 ## Published Images
 
@@ -115,6 +119,6 @@ All images are built for **ARM64 only** to support the ElderTree Raspberry Pi k3
 
 ### Authentication Issues
 
-1. Verify `CR_PAT` secret is set
-2. Check token hasn't expired
-3. Ensure token has correct permissions
+1. Verify repository has workflow write permissions enabled (Settings → Actions → General)
+2. Check that the workflow has `packages: write` permission in the `permissions` block
+3. Ensure the image name matches the repository owner (`ghcr.io/raolivei/...`)
