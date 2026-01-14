@@ -1,126 +1,248 @@
-import { Camera, Sparkles, Download, ArrowRight } from "lucide-react";
+import { ArrowRight, Upload, Wand2, Download, Check } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function HomePage() {
   return (
-    <div className="container mx-auto px-6 py-16">
+    <div className="relative">
       {/* Hero Section */}
-      <section className="text-center max-w-4xl mx-auto mb-20">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-500/10 border border-accent-500/20 rounded-full text-accent-400 text-sm mb-6 animate-fade-in">
-          <Sparkles className="w-4 h-4" />
-          <span>AI-Powered Professional Headshots</span>
-        </div>
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background-secondary" />
         
-        <h1 className="text-5xl md:text-6xl font-bold text-visage-50 mb-6 animate-slide-up">
-          Transform Your Photos Into{" "}
-          <span className="text-gradient">Studio-Quality</span>{" "}
-          Headshots
-        </h1>
+        {/* Decorative elements */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/3 rounded-full blur-3xl" />
         
-        <p className="text-xl text-visage-400 mb-10 max-w-2xl mx-auto animate-slide-up delay-100">
-          Upload your photos, choose your style, and get professional headshots 
-          perfect for LinkedIn, company profiles, and more. All self-hosted on 
-          your own infrastructure.
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up delay-200">
-          <a href="/packs/new" className="btn-primary text-lg px-8 py-4">
-            Get Started
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </a>
-          <a href="/packs" className="btn-secondary text-lg px-8 py-4">
-            View My Packs
-          </a>
-        </div>
-      </section>
+        {/* Grid pattern overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(250,250,249,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(250,250,249,0.1) 1px, transparent 1px)`,
+            backgroundSize: '64px 64px',
+          }}
+        />
 
-      {/* Features */}
-      <section className="grid md:grid-cols-3 gap-8 mb-20">
-        <div className="glass-card p-8 animate-fade-in delay-200">
-          <div className="w-14 h-14 rounded-xl bg-accent-500/10 flex items-center justify-center mb-6">
-            <Camera className="w-7 h-7 text-accent-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-visage-100 mb-3">
-            Upload Your Photos
-          </h3>
-          <p className="text-visage-400">
-            Upload 8-20 photos of yourself. Mix of angles, expressions, and 
-            lighting for best results.
-          </p>
-        </div>
-
-        <div className="glass-card p-8 animate-fade-in delay-300">
-          <div className="w-14 h-14 rounded-xl bg-accent-500/10 flex items-center justify-center mb-6">
-            <Sparkles className="w-7 h-7 text-accent-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-visage-100 mb-3">
-            AI Training & Generation
-          </h3>
-          <p className="text-visage-400">
-            Our AI learns your unique features and generates dozens of 
-            professional variations in your chosen styles.
-          </p>
-        </div>
-
-        <div className="glass-card p-8 animate-fade-in delay-400">
-          <div className="w-14 h-14 rounded-xl bg-accent-500/10 flex items-center justify-center mb-6">
-            <Download className="w-7 h-7 text-accent-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-visage-100 mb-3">
-            Download Your Best
-          </h3>
-          <p className="text-visage-400">
-            We auto-filter to keep only the best results. Pick your favorites 
-            and download high-resolution images.
-          </p>
-        </div>
-      </section>
-
-      {/* Style Preview */}
-      <section className="text-center mb-20">
-        <h2 className="text-3xl font-bold text-visage-100 mb-4">
-          Available Styles
-        </h2>
-        <p className="text-visage-400 mb-10 max-w-xl mx-auto">
-          Choose from multiple professional styles tailored for different contexts
-        </p>
-        
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[
-            { name: "Corporate", desc: "LinkedIn & Business" },
-            { name: "Studio", desc: "Dramatic Lighting" },
-            { name: "Natural", desc: "Outdoor & Warm" },
-            { name: "Executive", desc: "C-Suite Ready" },
-            { name: "Creative", desc: "Modern & Artistic" },
-          ].map((style, i) => (
-            <div 
-              key={style.name}
-              className="glass-card p-6 hover:border-accent-500/30 transition-all cursor-pointer"
-            >
-              <div className="w-full aspect-square rounded-lg bg-visage-800 mb-4 flex items-center justify-center">
-                <span className="text-4xl text-visage-600">
-                  {style.name[0]}
-                </span>
-              </div>
-              <h4 className="font-semibold text-visage-100">{style.name}</h4>
-              <p className="text-sm text-visage-500">{style.desc}</p>
+        <div className="container mx-auto px-6 py-24 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Tagline pill */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-subtle border border-border-accent rounded-full text-accent text-sm mb-8 animate-fade-in">
+              <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+              <span>Self-hosted AI Portrait Studio</span>
             </div>
-          ))}
+            
+            {/* Main headline - typography focused */}
+            <h1 className="animate-fade-in-up">
+              <span className="block text-5xl md:text-7xl lg:text-8xl font-display text-foreground mb-4 tracking-tight">
+                Professional headshots,
+              </span>
+              <span className="block text-4xl md:text-5xl lg:text-6xl font-display text-foreground-secondary">
+                generated by AI,
+              </span>
+              <span className="block text-4xl md:text-5xl lg:text-6xl font-display text-accent mt-2">
+                trained on you.
+              </span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="text-lg md:text-xl text-foreground-secondary mt-10 mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-150">
+              Upload a few photos. Our AI learns your unique features and creates 
+              studio-quality portraits in minutes — all running on your own infrastructure.
+            </p>
+            
+            {/* CTA buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-200">
+              <a href="/packs/new" className="btn-primary text-lg px-8 py-4 group">
+                Create Your Headshots
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a href="#how-it-works" className="btn-secondary text-lg px-8 py-4">
+                See How It Works
+              </a>
+            </div>
+            
+            {/* Trust indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-foreground-tertiary text-sm animate-fade-in delay-300">
+              <span className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-success" />
+                No cloud costs
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-success" />
+                Your data stays yours
+              </span>
+              <span className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-success" />
+                Commercial quality
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-foreground-tertiary rounded-full flex items-start justify-center p-1">
+            <div className="w-1.5 h-2.5 bg-foreground-tertiary rounded-full animate-pulse" />
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="glass-card p-12 text-center glow-accent">
-        <h2 className="text-3xl font-bold text-visage-100 mb-4">
-          Ready to Get Started?
-        </h2>
-        <p className="text-visage-400 mb-8 max-w-lg mx-auto">
-          Create your first headshot pack in minutes. No cloud costs, 
-          no subscriptions — all on your own infrastructure.
-        </p>
-        <a href="/packs/new" className="btn-primary text-lg px-10 py-4">
-          Create Your First Pack
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </a>
+      {/* How It Works */}
+      <section id="how-it-works" className="py-24 bg-background-secondary">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-display text-foreground mb-4">
+              Three steps to perfect headshots
+            </h2>
+            <p className="text-foreground-secondary text-lg max-w-xl mx-auto">
+              No photography experience required. Just upload and let AI do the work.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+            {/* Step 1 */}
+            <div className="relative group">
+              <div className="glass-card p-8 h-full transition-all duration-300 group-hover:border-accent/30">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-accent-subtle flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-accent" />
+                  </div>
+                  <span className="text-6xl font-display text-foreground/10 group-hover:text-accent/20 transition-colors">
+                    01
+                  </span>
+                </div>
+                <h3 className="text-xl font-display text-foreground mb-3">
+                  Upload your photos
+                </h3>
+                <p className="text-foreground-secondary leading-relaxed">
+                  Submit 10-20 photos of yourself. Different angles, expressions, 
+                  and lighting help the AI understand your unique features.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative group">
+              <div className="glass-card p-8 h-full transition-all duration-300 group-hover:border-accent/30">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-accent-subtle flex items-center justify-center">
+                    <Wand2 className="w-6 h-6 text-accent" />
+                  </div>
+                  <span className="text-6xl font-display text-foreground/10 group-hover:text-accent/20 transition-colors">
+                    02
+                  </span>
+                </div>
+                <h3 className="text-xl font-display text-foreground mb-3">
+                  AI training & generation
+                </h3>
+                <p className="text-foreground-secondary leading-relaxed">
+                  Our AI trains a personalized model on your features, then generates 
+                  dozens of professional variations across multiple styles.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative group">
+              <div className="glass-card p-8 h-full transition-all duration-300 group-hover:border-accent/30">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-accent-subtle flex items-center justify-center">
+                    <Download className="w-6 h-6 text-accent" />
+                  </div>
+                  <span className="text-6xl font-display text-foreground/10 group-hover:text-accent/20 transition-colors">
+                    03
+                  </span>
+                </div>
+                <h3 className="text-xl font-display text-foreground mb-3">
+                  Download the best
+                </h3>
+                <p className="text-foreground-secondary leading-relaxed">
+                  We automatically filter for quality. Review the top results, 
+                  pick your favorites, and download in high resolution.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Styles Preview */}
+      <section className="py-24">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-display text-foreground mb-4">
+              15+ professional styles
+            </h2>
+            <p className="text-foreground-secondary text-lg max-w-xl mx-auto">
+              From corporate LinkedIn to creative editorial — find your perfect look.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[
+              { name: "Corporate", category: "Business" },
+              { name: "Executive", category: "Business" },
+              { name: "Studio Classic", category: "Studio" },
+              { name: "Natural Light", category: "Natural" },
+              { name: "Creative", category: "Modern" },
+              { name: "Tech Startup", category: "Creative" },
+              { name: "Healthcare", category: "Professional" },
+              { name: "Academic", category: "Professional" },
+              { name: "Speaker", category: "Personal Brand" },
+              { name: "Minimalist", category: "Studio" },
+            ].map((style, i) => (
+              <div 
+                key={style.name}
+                className="glass-card p-5 hover:border-accent/30 hover:bg-background-elevated transition-all cursor-pointer group"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
+                <div className="w-full aspect-[3/4] rounded-lg bg-gradient-to-br from-background-tertiary to-background-elevated mb-4 flex items-center justify-center overflow-hidden">
+                  <span className="text-5xl font-display text-foreground/5 group-hover:text-accent/10 transition-colors">
+                    {style.name[0]}
+                  </span>
+                </div>
+                <h4 className="font-medium text-foreground group-hover:text-accent transition-colors">
+                  {style.name}
+                </h4>
+                <p className="text-sm text-foreground-tertiary">{style.category}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center mt-10">
+            <a href="/packs/new" className="btn-ghost text-accent hover:text-accent-muted">
+              View all styles
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-24 bg-background-secondary">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <Logo variant="monogram" size="xl" className="text-accent/20 mb-8" />
+            
+            <h2 className="text-4xl md:text-5xl font-display text-foreground mb-6">
+              Ready to get started?
+            </h2>
+            
+            <p className="text-foreground-secondary text-lg mb-10 max-w-lg mx-auto">
+              Create your first headshot pack in minutes. Self-hosted means 
+              no subscriptions, no cloud costs, and complete privacy.
+            </p>
+            
+            <a href="/packs/new" className="btn-primary text-lg px-10 py-4 group shadow-glow">
+              Create Your Headshots
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </a>
+            
+            <p className="text-foreground-tertiary text-sm mt-8">
+              Running on ElderTree • Powered by SDXL
+            </p>
+          </div>
+        </div>
       </section>
     </div>
   );
