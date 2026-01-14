@@ -15,6 +15,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Commercial Quality Pipeline
+- **Photo Validator** (`apps/worker/src/pipeline/validator.py`)
+  - Face detection using InsightFace/RetinaFace
+  - Quality checks: resolution, blur, exposure
+  - Face preprocessing with alignment
+  - Background removal support (rembg)
+  - Pose diversity checking
+
+- **Quality Filter** (`apps/worker/src/pipeline/filter.py`)
+  - Multi-factor scoring (face similarity, aesthetic, technical, artifacts)
+  - ArcFace face embeddings for similarity scoring
+  - CLIP-based aesthetic scoring
+  - Artifact detection for eyes, teeth, composition
+  - Configurable thresholds and weights
+
+- **Post-Processor** (`apps/worker/src/pipeline/postprocess.py`)
+  - Face restoration with CodeFormer/GFPGAN
+  - Upscaling with Real-ESRGAN (2x)
+  - Auto color correction
+  - Sharpening pipeline
+
+- **Real LoRA Training** (`apps/worker/src/pipeline/trainer.py`)
+  - PEFT-based LoRA training for SDXL
+  - Auto-captioning for training images
+  - Configurable hyperparameters
+  - MPS (Apple Silicon) support
+  - Progress tracking
+
+- **Expanded Prompt Library** (`packages/shared/prompts.py`)
+  - 15+ professional headshot styles
+  - 3-5 prompt variations per style
+  - Categories: business, studio, natural, creative, professional, personal_brand, entertainment
+  - Industry-based style recommendations
+
+#### Repository Standards
 - Repository template standards from repo-template
 - `.github/CODEOWNERS` - Code ownership definitions
 - `.github/dependabot.yml` - Automated dependency updates
@@ -33,8 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Build workflows now use `CR_PAT` secret instead of `GITHUB_TOKEN`
+- Build workflows use `GITHUB_TOKEN` for GHCR authentication (no expiring PAT needed)
 - Updated README with badges and improved structure
+- Worker requirements updated with all ML dependencies
 
 ## [0.1.0] - 2026-01-14
 
