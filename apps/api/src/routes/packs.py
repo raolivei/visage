@@ -12,7 +12,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ..config import get_settings
 from ..database import get_db
@@ -89,7 +88,7 @@ async def create_pack(
     db.add(pack)
     await db.flush()
     
-    logger.info(f"Created pack {pack.id}")
+    logger.info("Created pack %s", pack.id)
     return pack_to_response(pack)
 
 
@@ -192,7 +191,7 @@ async def delete_pack(
     # Delete from database (cascades to photos, jobs, outputs)
     await db.delete(pack)
     
-    logger.info(f"Deleted pack {pack_id}")
+    logger.info("Deleted pack %s", pack_id)
 
 
 # ============================================================================
@@ -275,7 +274,7 @@ async def upload_photos(
             uploaded_photos.append(photo)
             
         except Exception as e:
-            logger.error(f"Failed to upload {file.filename}: {e}")
+            logger.error("Failed to upload file: %s", type(e).__name__)
             errors.append(f"{file.filename}: Upload failed")
     
     # Update pack status
@@ -394,7 +393,7 @@ async def start_generation(
     # Update pack status
     pack.status = PackStatus.TRAINING
     
-    logger.info(f"Started generation for pack {pack_id}, job {job.id}")
+    logger.info("Started generation for pack %s, job %s", pack_id, job.id)
     
     job_response = JobResponse(
         id=job.id,

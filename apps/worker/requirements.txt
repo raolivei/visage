@@ -14,12 +14,23 @@ peft>=0.7.0
 # Image processing
 Pillow>=10.2.0
 opencv-python>=4.9.0
+numpy>=1.26.0
 
-# Face detection/recognition
-face-recognition>=1.3.0
-dlib>=19.24.0
+# Face detection/recognition (InsightFace is preferred)
 insightface>=0.7.3
 onnxruntime>=1.16.0
+
+# Background removal (optional)
+rembg>=2.0.50
+
+# Quality scoring - CLIP aesthetic
+# Note: CLIP requires special install - see README
+# pip install git+https://github.com/openai/CLIP.git
+
+# Post-processing
+# codeformer-perceptor>=0.1.0  # Install separately due to dependencies
+# realesrgan>=0.3.0  # Install separately
+basicsr>=1.4.2
 
 # S3/MinIO
 boto3>=1.34.0

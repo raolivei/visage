@@ -13,8 +13,6 @@ import tempfile
 import time
 from pathlib import Path
 
-import httpx
-from PIL import Image
 from rich.console import Console
 from rich.logging import RichHandler
 

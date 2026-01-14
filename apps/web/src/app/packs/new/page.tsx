@@ -12,7 +12,7 @@ import {
   ArrowRight,
   Image as ImageIcon 
 } from "lucide-react";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { api, StylePreset } from "@/lib/api";
 
 const STYLE_PRESETS: StylePreset[] = [
@@ -35,7 +35,7 @@ export default function NewPackPage() {
   const [step, setStep] = useState<"upload" | "style" | "review">("upload");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["corporate"]);
-  const [packId, setPackId] = useState<string | null>(null);
+  const [, setPackId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
