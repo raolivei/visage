@@ -1,37 +1,105 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { VisageIcon } from "./VisageIcon";
 
 interface LogoProps {
-  variant?: "wordmark" | "uppercase" | "monogram";
+  variant?: "wordmark" | "uppercase" | "monogram" | "icon" | "lockup";
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
+  iconClassName?: string;
 }
 
 const sizes = {
-  sm: { wordmark: "text-lg", uppercase: "text-sm", monogram: "text-xl" },
-  md: { wordmark: "text-2xl", uppercase: "text-base", monogram: "text-3xl" },
-  lg: { wordmark: "text-4xl", uppercase: "text-xl", monogram: "text-5xl" },
-  xl: { wordmark: "text-6xl", uppercase: "text-2xl", monogram: "text-7xl" },
+  sm: { 
+    wordmark: "text-lg", 
+    uppercase: "text-sm", 
+    monogram: "text-xl",
+    icon: 24,
+    lockupIcon: 28,
+    lockupText: "text-lg",
+  },
+  md: { 
+    wordmark: "text-2xl", 
+    uppercase: "text-base", 
+    monogram: "text-3xl",
+    icon: 32,
+    lockupIcon: 36,
+    lockupText: "text-xl",
+  },
+  lg: { 
+    wordmark: "text-4xl", 
+    uppercase: "text-xl", 
+    monogram: "text-5xl",
+    icon: 48,
+    lockupIcon: 48,
+    lockupText: "text-2xl",
+  },
+  xl: { 
+    wordmark: "text-6xl", 
+    uppercase: "text-2xl", 
+    monogram: "text-7xl",
+    icon: 64,
+    lockupIcon: 64,
+    lockupText: "text-3xl",
+  },
 };
 
 /**
  * Visage Logo Component
  * 
- * Typography-driven wordmark logo.
- * No icons, no symbols — refined and confident.
+ * Variants:
+ * - wordmark: "Visage" in Libre Baskerville serif
+ * - uppercase: "VISAGE" in DM Sans
+ * - monogram: Letter "V" 
+ * - icon: Concentric circles mark
+ * - lockup: Icon + wordmark together
  */
 export function Logo({ 
   variant = "wordmark", 
   size = "md",
-  className 
+  className,
+  iconClassName,
 }: LogoProps) {
+  const sizeConfig = sizes[size];
+
+  // Icon variant
+  if (variant === "icon") {
+    return (
+      <VisageIcon 
+        size={sizeConfig.icon} 
+        className={cn(className)}
+      />
+    );
+  }
+
+  // Lockup: Icon + Wordmark
+  if (variant === "lockup") {
+    return (
+      <div className={cn("flex items-center gap-3", className)}>
+        <VisageIcon 
+          size={sizeConfig.lockupIcon} 
+          className={iconClassName}
+        />
+        <span
+          className={cn(
+            "font-display font-normal tracking-logo text-foreground",
+            sizeConfig.lockupText,
+          )}
+        >
+          Visage
+        </span>
+      </div>
+    );
+  }
+
+  // Monogram: Letter V
   if (variant === "monogram") {
     return (
       <span
         className={cn(
           "font-display font-normal tracking-tight text-foreground select-none",
-          sizes[size].monogram,
+          sizeConfig.monogram,
           className
         )}
         aria-label="Visage"
@@ -41,12 +109,13 @@ export function Logo({
     );
   }
 
+  // Uppercase: VISAGE
   if (variant === "uppercase") {
     return (
       <span
         className={cn(
-          "font-sans font-medium tracking-[0.15em] text-foreground select-none",
-          sizes[size].uppercase,
+          "font-sans font-medium tracking-logo-caps text-foreground select-none",
+          sizeConfig.uppercase,
           className
         )}
         aria-label="Visage"
@@ -56,115 +125,18 @@ export function Logo({
     );
   }
 
-  // Default: wordmark (primary logo)
+  // Default: Wordmark (Visage in serif)
   return (
     <span
       className={cn(
-        "font-display font-normal tracking-[0.02em] text-foreground select-none",
-        sizes[size].wordmark,
+        "font-display font-normal tracking-logo text-foreground select-none",
+        sizeConfig.wordmark,
         className
       )}
       aria-label="Visage"
     >
       Visage
     </span>
-  );
-}
-
-/**
- * SVG Logo for exports and static usage
- */
-export function LogoSVG({ 
-  variant = "wordmark",
-  width = 120,
-  height = 32,
-  color = "currentColor",
-  className,
-}: {
-  variant?: "wordmark" | "uppercase" | "monogram";
-  width?: number;
-  height?: number;
-  color?: string;
-  className?: string;
-}) {
-  if (variant === "monogram") {
-    return (
-      <svg
-        width={height}
-        height={height}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-        aria-label="Visage"
-      >
-        <text
-          x="50%"
-          y="50%"
-          dominantBaseline="central"
-          textAnchor="middle"
-          fill={color}
-          fontFamily="'Libre Baskerville', Georgia, serif"
-          fontSize="32"
-          fontWeight="400"
-        >
-          V
-        </text>
-      </svg>
-    );
-  }
-
-  if (variant === "uppercase") {
-    return (
-      <svg
-        width={width}
-        height={height}
-        viewBox="0 0 120 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={className}
-        aria-label="Visage"
-      >
-        <text
-          x="0"
-          y="50%"
-          dominantBaseline="central"
-          fill={color}
-          fontFamily="'DM Sans', sans-serif"
-          fontSize="16"
-          fontWeight="500"
-          letterSpacing="0.15em"
-        >
-          VISAGE
-        </text>
-      </svg>
-    );
-  }
-
-  // Default: wordmark
-  return (
-    <svg
-      width={width}
-      height={height}
-      viewBox="0 0 120 32"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-label="Visage"
-    >
-      <text
-        x="0"
-        y="50%"
-        dominantBaseline="central"
-        fill={color}
-        fontFamily="'Libre Baskerville', Georgia, serif"
-        fontSize="24"
-        fontWeight="400"
-        letterSpacing="0.02em"
-      >
-        Visage
-      </text>
-    </svg>
   );
 }
 

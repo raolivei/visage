@@ -6,7 +6,32 @@
 
 ## Logo
 
-### Primary Wordmark
+### Brand Mark (Icon)
+
+The Visage icon features **concentric flowing lines** forming a circular mark. It represents focus, imaging, and refinement — without literal camera or AI imagery.
+
+```
+Shape: Concentric curves within a circle
+Style: Line art, single color
+Color: Accent amber (#d4a574) on dark, or dark on light
+```
+
+**Usage:**
+- Favicon
+- App icons
+- Standalone mark
+- Loading states
+
+### Lockup (Icon + Wordmark)
+
+The primary logo combines the icon with the serif wordmark.
+
+**Usage:**
+- Website header
+- Marketing materials
+- Documentation headers
+
+### Wordmark Only
 
 The Visage wordmark uses **Libre Baskerville** — an elegant serif that conveys sophistication without pretension.
 
@@ -18,9 +43,9 @@ Case: Title case
 ```
 
 **Usage:**
-- Website header
-- Documentation
-- Marketing materials
+- When icon is already present nearby
+- Text-only contexts
+- Print materials
 
 ### Uppercase Variant
 
@@ -37,15 +62,6 @@ Case: UPPERCASE
 - Admin dashboards
 - CLI headers
 - System status pages
-
-### Monogram
-
-The letter **V** for small UI contexts.
-
-**Usage:**
-- Favicon
-- App icons
-- Loading states
 
 ---
 
@@ -177,12 +193,16 @@ border-radius: 16px;
 apps/web/public/
 ├── logo.svg          # Primary wordmark (light on dark)
 ├── logo-dark.svg     # Inverted wordmark (dark on light)
-├── icon.svg          # Monogram icon
+├── icon.svg          # Brand mark icon (accent color)
+├── icon-mark.svg     # Brand mark (currentColor)
 └── og-image.png      # Social sharing image
 
-apps/web/src/
-├── components/Logo.tsx     # React component
-└── lib/brand.ts           # Brand tokens
+apps/web/src/components/
+├── Logo.tsx          # Logo component (wordmark, lockup, etc.)
+├── VisageIcon.tsx    # Brand mark icon component
+
+apps/web/src/lib/
+└── brand.ts          # Brand design tokens
 ```
 
 ---

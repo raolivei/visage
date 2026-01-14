@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Logo } from "@/components/Logo";
+import { VisageIcon } from "@/components/VisageIcon";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,8 +28,13 @@ export default function RootLayout({
           <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
             <div className="container mx-auto px-6 py-4">
               <nav className="flex items-center justify-between">
-                <a href="/" className="flex items-center gap-3 group">
-                  <Logo variant="wordmark" size="md" className="group-hover:text-accent transition-colors" />
+                <a href="/" className="group">
+                  <Logo 
+                    variant="lockup" 
+                    size="sm" 
+                    className="group-hover:opacity-80 transition-opacity"
+                    iconClassName="text-accent group-hover:text-accent-muted transition-colors"
+                  />
                 </a>
                 
                 <div className="flex items-center gap-4">
@@ -52,8 +58,8 @@ export default function RootLayout({
           <footer className="border-t border-border py-8">
             <div className="container mx-auto px-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Logo variant="monogram" size="sm" className="text-foreground-tertiary" />
+                <div className="flex items-center gap-3">
+                  <VisageIcon size={24} className="text-foreground-tertiary" />
                   <span className="text-foreground-tertiary text-sm">
                     Self-hosted AI Headshot Generator
                   </span>

@@ -1,5 +1,6 @@
 import { ArrowRight, Upload, Wand2, Download, Check } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { VisageIcon } from "@/components/VisageIcon";
 
 export default function HomePage() {
   return (
@@ -222,7 +223,7 @@ export default function HomePage() {
       <section className="py-24 bg-background-secondary">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <Logo variant="monogram" size="xl" className="text-accent/20 mb-8" />
+            <VisageIcon size={80} className="text-accent/30 mx-auto mb-8" />
             
             <h2 className="text-4xl md:text-5xl font-display text-foreground mb-6">
               Ready to get started?

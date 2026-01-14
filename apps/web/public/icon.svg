@@ -1,13 +1,17 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="8" fill="#0a0a0b"/>
-  <text
-    x="50%"
-    y="52%"
-    dominant-baseline="central"
-    text-anchor="middle"
-    fill="#fafaf9"
-    font-family="'Libre Baskerville', Georgia, serif"
-    font-size="20"
-    font-weight="400"
-  >V</text>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Visage Icon: Concentric circles with wave -->
+  <g stroke="#d4a574" stroke-width="2" fill="none" stroke-linecap="round">
+    <!-- Outer circle -->
+    <circle cx="32" cy="32" r="28" opacity="0.9"/>
+    <!-- Inner concentric curves -->
+    <path d="M32 8 C46 8 56 18 56 32 C56 46 46 56 32 56" opacity="0.85"/>
+    <path d="M32 14 C42 14 50 22 50 32 C50 42 42 50 32 50" opacity="0.8"/>
+    <path d="M32 20 C38 20 44 26 44 32 C44 38 38 44 32 44" opacity="0.75"/>
+    <!-- Central wave/swirl -->
+    <path d="M32 26 C35 26 38 29 38 32 C38 35 35 38 32 38 C29 38 26 35 26 32 C26 29 29 26 32 26" opacity="0.7"/>
+    <!-- Left side curves -->
+    <path d="M8 32 C8 18 18 8 32 8" opacity="0.85"/>
+    <path d="M14 32 C14 22 22 14 32 14" opacity="0.8"/>
+    <path d="M20 32 C20 26 26 20 32 20" opacity="0.75"/>
+  </g>
 </svg>

@@ -1,0 +1,16 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Visage Mark: Concentric flowing lines -->
+  <g stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer ring -->
+    <circle cx="32" cy="32" r="26"/>
+    <!-- Flowing concentric waves -->
+    <path d="M32 10 Q50 10 54 32 Q50 54 32 54"/>
+    <path d="M32 16 Q44 16 48 32 Q44 48 32 48"/>
+    <path d="M32 22 Q38 22 42 32 Q38 42 32 42"/>
+    <path d="M32 28 Q34 28 36 32 Q34 36 32 36"/>
+    <!-- Mirror waves (left side) -->
+    <path d="M32 10 Q14 10 10 32 Q14 54 32 54"/>
+    <path d="M32 16 Q20 16 16 32 Q20 48 32 48"/>
+    <path d="M32 22 Q26 22 22 32 Q26 42 32 42"/>
+  </g>
+</svg>
