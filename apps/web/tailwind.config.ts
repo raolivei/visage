@@ -9,53 +9,125 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Sophisticated dark palette
-        visage: {
-          50: "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          300: "#cbd5e1",
-          400: "#94a3b8",
-          500: "#64748b",
-          600: "#475569",
-          700: "#334155",
-          800: "#1e293b",
-          900: "#0f172a",
-          950: "#020617",
+        // Background colors - warm dark neutrals
+        background: {
+          DEFAULT: "#0a0a0b",
+          secondary: "#111113",
+          tertiary: "#18181b",
+          elevated: "#1f1f23",
         },
-        // Accent color - warm amber
+        // Foreground colors - warm whites
+        foreground: {
+          DEFAULT: "#fafaf9",
+          secondary: "#a8a8a3",
+          tertiary: "#71716b",
+          inverse: "#0a0a0b",
+        },
+        // Accent - warm amber (restrained, editorial)
         accent: {
-          50: "#fffbeb",
-          100: "#fef3c7",
-          200: "#fde68a",
-          300: "#fcd34d",
-          400: "#fbbf24",
-          500: "#f59e0b",
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
+          DEFAULT: "#d4a574",
+          muted: "#b8956a",
+          subtle: "rgba(212, 165, 116, 0.15)",
+          50: "#fefcf8",
+          100: "#fdf6eb",
+          200: "#fae8cc",
+          300: "#f5d5a3",
+          400: "#e8b87a",
+          500: "#d4a574",
+          600: "#b8956a",
+          700: "#8f7352",
+          800: "#6b5640",
+          900: "#4a3c2d",
+        },
+        // Border colors
+        border: {
+          DEFAULT: "#27272a",
+          subtle: "#1f1f23",
+          accent: "rgba(212, 165, 116, 0.3)",
+        },
+        // Semantic colors
+        success: {
+          DEFAULT: "#4ade80",
+          muted: "rgba(74, 222, 128, 0.15)",
+        },
+        warning: {
+          DEFAULT: "#fbbf24",
+          muted: "rgba(251, 191, 36, 0.15)",
+        },
+        error: {
+          DEFAULT: "#f87171",
+          muted: "rgba(248, 113, 113, 0.15)",
+        },
+        info: {
+          DEFAULT: "#60a5fa",
+          muted: "rgba(96, 165, 250, 0.15)",
+        },
+        // Legacy visage palette (for backward compatibility)
+        visage: {
+          50: "#fafaf9",
+          100: "#f1f0ee",
+          200: "#e2e1de",
+          300: "#c8c6c1",
+          400: "#a8a8a3",
+          500: "#71716b",
+          600: "#52524d",
+          700: "#3a3a36",
+          800: "#27272a",
+          900: "#18181b",
+          950: "#0a0a0b",
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
-        display: ["var(--font-cabinet)", "system-ui", "sans-serif"],
+        // Display: Elegant serif for headings and logo
+        display: ["'Libre Baskerville'", "Georgia", "serif"],
+        // Sans: Clean humanist for body text
+        sans: ["'DM Sans'", "Inter", "system-ui", "sans-serif"],
+        // Mono: Technical contexts
+        mono: ["'JetBrains Mono'", "'Fira Code'", "monospace"],
+      },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
+      },
+      letterSpacing: {
+        logo: "0.02em",
+        "logo-caps": "0.15em",
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-out",
+        "fade-in-up": "fadeInUp 0.5s ease-out",
         "slide-up": "slideUp 0.5s ease-out",
+        "slide-down": "slideDown 0.3s ease-out",
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "scale-in": "scaleIn 0.2s ease-out",
       },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        fadeInUp: {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
         slideUp: {
           "0%": { opacity: "0", transform: "translateY(20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        slideDown: {
+          "0%": { opacity: "0", transform: "translateY(-10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        scaleIn: {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+      },
+      boxShadow: {
+        glow: "0 0 40px rgba(212, 165, 116, 0.15)",
+        "glow-lg": "0 0 60px rgba(212, 165, 116, 0.2)",
+      },
+      borderRadius: {
+        "4xl": "2rem",
       },
     },
   },

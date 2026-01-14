@@ -2,31 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom font imports */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+/* ============================================================================
+   VISAGE BRAND SYSTEM
+   Typography-first • Calm • Professional • Timeless
+   ============================================================================ */
 
+/* Font imports */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================================ */
 :root {
-  --font-cabinet: 'DM Sans', system-ui, sans-serif;
+  /* Colors */
+  --color-background: #0a0a0b;
+  --color-background-secondary: #111113;
+  --color-background-tertiary: #18181b;
+  --color-background-elevated: #1f1f23;
   
-  /* Background gradient */
-  --bg-gradient: linear-gradient(
-    135deg,
-    theme('colors.visage.950') 0%,
-    theme('colors.visage.900') 50%,
-    theme('colors.visage.950') 100%
-  );
+  --color-foreground: #fafaf9;
+  --color-foreground-secondary: #a8a8a3;
+  --color-foreground-tertiary: #71716b;
+  
+  --color-accent: #d4a574;
+  --color-accent-muted: #b8956a;
+  --color-accent-subtle: rgba(212, 165, 116, 0.15);
+  
+  --color-border: #27272a;
+  --color-border-subtle: #1f1f23;
+  --color-border-accent: rgba(212, 165, 116, 0.3);
+  
+  /* Typography */
+  --font-display: 'Libre Baskerville', Georgia, serif;
+  --font-body: 'DM Sans', Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Spacing */
+  --space-unit: 0.25rem;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+  
+  /* Shadows */
+  --shadow-glow: 0 0 40px rgba(212, 165, 116, 0.15);
 }
 
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
 @layer base {
   html {
     @apply antialiased;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-visage-950 text-visage-100;
-    background: var(--bg-gradient);
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "cv11", "ss01";
     min-height: 100vh;
+  }
+  
+  /* Headings use display font */
+  h1, h2, h3 {
+    @apply font-display;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-accent/30 text-foreground;
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-background;
   }
 
   /* Custom scrollbar */
@@ -36,41 +88,46 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-visage-900;
+    @apply bg-background-secondary;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-visage-700 rounded-full;
+    @apply bg-border rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-visage-600;
+    @apply bg-foreground-tertiary;
   }
 }
 
+/* ============================================================================
+   COMPONENT STYLES
+   ============================================================================ */
 @layer components {
   /* Glass card effect */
   .glass-card {
-    @apply bg-visage-900/50 backdrop-blur-xl border border-visage-800/50 rounded-2xl;
+    @apply bg-background-tertiary/80 backdrop-blur-xl 
+           border border-border rounded-2xl;
   }
 
-  /* Primary button */
+  /* Primary button - warm accent */
   .btn-primary {
     @apply inline-flex items-center justify-center px-6 py-3 
-           bg-accent-500 hover:bg-accent-400 
-           text-visage-950 font-semibold rounded-xl
+           bg-accent hover:bg-accent-muted
+           text-background font-semibold rounded-xl
            transition-all duration-200 ease-out
-           shadow-lg shadow-accent-500/25
-           hover:shadow-xl hover:shadow-accent-500/30
-           active:scale-[0.98];
+           shadow-lg shadow-accent/20
+           hover:shadow-xl hover:shadow-accent/25
+           active:scale-[0.98]
+           focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
   /* Secondary button */
   .btn-secondary {
     @apply inline-flex items-center justify-center px-6 py-3
-           bg-visage-800 hover:bg-visage-700
-           text-visage-100 font-medium rounded-xl
-           border border-visage-700 hover:border-visage-600
+           bg-background-elevated hover:bg-border
+           text-foreground font-medium rounded-xl
+           border border-border hover:border-foreground-tertiary
            transition-all duration-200 ease-out
            active:scale-[0.98];
   }
@@ -78,17 +135,17 @@
   /* Ghost button */
   .btn-ghost {
     @apply inline-flex items-center justify-center px-4 py-2
-           text-visage-300 hover:text-visage-100
-           hover:bg-visage-800/50 rounded-lg
+           text-foreground-secondary hover:text-foreground
+           hover:bg-background-elevated rounded-lg
            transition-all duration-200 ease-out;
   }
 
   /* Input field */
   .input-field {
     @apply w-full px-4 py-3 
-           bg-visage-900/50 border border-visage-700
-           rounded-xl text-visage-100 placeholder:text-visage-500
-           focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/50
+           bg-background-secondary border border-border
+           rounded-xl text-foreground placeholder:text-foreground-tertiary
+           focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50
            transition-all duration-200;
   }
 
@@ -96,64 +153,100 @@
   .dropzone {
     @apply relative flex flex-col items-center justify-center
            w-full min-h-[300px] p-8
-           border-2 border-dashed border-visage-700
+           border-2 border-dashed border-border
            rounded-2xl cursor-pointer
-           bg-visage-900/30 hover:bg-visage-900/50
-           hover:border-accent-500/50
+           bg-background-secondary/50 hover:bg-background-tertiary
+           hover:border-accent/50
            transition-all duration-300 ease-out;
   }
 
   .dropzone.active {
-    @apply border-accent-500 bg-accent-500/10;
+    @apply border-accent bg-accent-subtle;
   }
 
   /* Photo grid item */
   .photo-card {
     @apply relative aspect-square overflow-hidden rounded-xl
-           bg-visage-800 border border-visage-700
+           bg-background-tertiary border border-border
            group cursor-pointer
            transition-all duration-300 ease-out
-           hover:border-accent-500/50 hover:shadow-lg hover:shadow-accent-500/10;
+           hover:border-accent/50 hover:shadow-glow;
   }
 
-  /* Status badge */
+  /* Status badges */
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5
            text-xs font-medium rounded-full;
   }
 
   .badge-pending {
-    @apply bg-visage-700 text-visage-300;
+    @apply bg-background-elevated text-foreground-secondary;
   }
 
   .badge-processing {
-    @apply bg-blue-500/20 text-blue-400;
+    @apply bg-info-muted text-info;
   }
 
   .badge-success {
-    @apply bg-green-500/20 text-green-400;
+    @apply bg-success-muted text-success;
   }
 
   .badge-error {
-    @apply bg-red-500/20 text-red-400;
+    @apply bg-error-muted text-error;
+  }
+
+  /* Logo styles */
+  .logo-wordmark {
+    @apply font-display font-normal tracking-logo;
+  }
+  
+  .logo-uppercase {
+    @apply font-sans font-medium tracking-logo-caps uppercase;
   }
 }
 
+/* ============================================================================
+   UTILITY STYLES
+   ============================================================================ */
 @layer utilities {
   /* Text gradient */
   .text-gradient {
-    @apply bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-accent to-accent-muted bg-clip-text text-transparent;
+  }
+
+  /* Subtle text gradient */
+  .text-gradient-subtle {
+    @apply bg-gradient-to-r from-foreground to-foreground-secondary bg-clip-text text-transparent;
   }
 
   /* Glow effects */
-  .glow-accent {
-    box-shadow: 0 0 40px theme('colors.accent.500 / 20%');
+  .glow {
+    box-shadow: var(--shadow-glow);
   }
 
-  /* Animation delays */
+  .glow-lg {
+    box-shadow: 0 0 60px rgba(212, 165, 116, 0.2);
+  }
+
+  /* Animation delays for staggered reveals */
+  .delay-75 { animation-delay: 75ms; }
   .delay-100 { animation-delay: 100ms; }
+  .delay-150 { animation-delay: 150ms; }
   .delay-200 { animation-delay: 200ms; }
   .delay-300 { animation-delay: 300ms; }
   .delay-400 { animation-delay: 400ms; }
   .delay-500 { animation-delay: 500ms; }
+  
+  /* Prose styling for content */
+  .prose-visage {
+    @apply text-foreground-secondary leading-relaxed;
+  }
+  
+  .prose-visage strong {
+    @apply text-foreground font-semibold;
+  }
+  
+  .prose-visage a {
+    @apply text-accent hover:text-accent-muted underline underline-offset-2;
+  }
 }
