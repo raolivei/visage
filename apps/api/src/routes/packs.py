@@ -12,7 +12,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ..config import get_settings
 from ..database import get_db

@@ -35,7 +35,7 @@ export default function NewPackPage() {
   const [step, setStep] = useState<"upload" | "style" | "review">("upload");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["corporate"]);
-  const [packId, setPackId] = useState<string | null>(null);
+  const [, setPackId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
