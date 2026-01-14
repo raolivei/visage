@@ -164,11 +164,11 @@
     @apply border-accent bg-accent-subtle;
   }
 
-  /* Photo grid item */
+  /* Photo grid item - Note: add 'group' class manually to elements using this */
   .photo-card {
     @apply relative aspect-square overflow-hidden rounded-xl
            bg-background-tertiary border border-border
-           group cursor-pointer
+           cursor-pointer
            transition-all duration-300 ease-out
            hover:border-accent/50 hover:shadow-glow;
   }
