@@ -42,7 +42,7 @@ async def health_check(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         await db.execute(text("SELECT 1"))
         services["database"] = "healthy"
     except Exception as e:
-        logger.error(f"Database health check failed: {e}")
+        logger.error("Database health check failed: %s", type(e).__name__)
         services["database"] = "unhealthy"
     
     # Check Redis
@@ -53,7 +53,7 @@ async def health_check(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         else:
             services["redis"] = "unhealthy"
     except Exception as e:
-        logger.error(f"Redis health check failed: {e}")
+        logger.error("Redis health check failed: %s", type(e).__name__)
         services["redis"] = "unhealthy"
     
     # Check MinIO
@@ -63,7 +63,7 @@ async def health_check(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         storage.list_files(prefix="health-check/")
         services["storage"] = "healthy"
     except Exception as e:
-        logger.error(f"Storage health check failed: {e}")
+        logger.error("Storage health check failed: %s", type(e).__name__)
         services["storage"] = "unhealthy"
     
     # Overall status
@@ -97,6 +97,6 @@ async def readiness(db: AsyncSession = Depends(get_db)):
         # Quick database check
         await db.execute(text("SELECT 1"))
         return {"status": "ready"}
-    except Exception as e:
-        logger.error(f"Readiness check failed: {e}")
-        return {"status": "not ready", "error": str(e)}
+    except Exception:
+        logger.error("Readiness check failed")
+        return {"status": "not ready"}

@@ -159,7 +159,6 @@ class QueueClient:
             True if added successfully
         """
         try:
-            job_key = f"{self.QUEUE_PREFIX}:{job_id}:data"
             logs_key = f"{self.QUEUE_PREFIX}:{job_id}:logs"
             
             log_entry = json.dumps({

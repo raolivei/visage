@@ -12,7 +12,7 @@ import {
   ArrowRight,
   Image as ImageIcon 
 } from "lucide-react";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { api, StylePreset } from "@/lib/api";
 
 const STYLE_PRESETS: StylePreset[] = [

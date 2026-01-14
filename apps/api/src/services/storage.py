@@ -45,14 +45,14 @@ class StorageService:
         """Create bucket if it doesn't exist."""
         try:
             self.client.head_bucket(Bucket=self.bucket)
-            logger.info(f"Bucket '{self.bucket}' exists")
+            logger.info("Bucket exists: %s", self.bucket)
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code")
             if error_code == "404":
-                logger.info(f"Creating bucket '{self.bucket}'")
+                logger.info("Creating bucket: %s", self.bucket)
                 self.client.create_bucket(Bucket=self.bucket)
             else:
-                logger.error(f"Error checking bucket: {e}")
+                logger.error("Error checking bucket: %s", type(e).__name__)
                 raise
 
     def upload_file(
@@ -79,10 +79,10 @@ class StorageService:
                 key,
                 ExtraArgs={"ContentType": content_type},
             )
-            logger.info(f"Uploaded file to s3://{self.bucket}/{key}")
+            logger.info("Uploaded file to bucket")
             return key
         except ClientError as e:
-            logger.error(f"Failed to upload file: {e}")
+            logger.error("Failed to upload file: %s", type(e).__name__)
             raise
 
     def upload_bytes(
@@ -118,7 +118,7 @@ class StorageService:
             response = self.client.get_object(Bucket=self.bucket, Key=key)
             return response["Body"].read()
         except ClientError as e:
-            logger.error(f"Failed to download file: {e}")
+            logger.error("Failed to download file: %s", type(e).__name__)
             raise
 
     def delete_file(self, key: str) -> bool:
@@ -133,10 +133,10 @@ class StorageService:
         """
         try:
             self.client.delete_object(Bucket=self.bucket, Key=key)
-            logger.info(f"Deleted s3://{self.bucket}/{key}")
+            logger.info("Deleted file from bucket")
             return True
         except ClientError as e:
-            logger.error(f"Failed to delete file: {e}")
+            logger.error("Failed to delete file: %s", type(e).__name__)
             return False
 
     def get_presigned_url(
@@ -164,7 +164,7 @@ class StorageService:
             )
             return url
         except ClientError as e:
-            logger.error(f"Failed to generate presigned URL: {e}")
+            logger.error("Failed to generate presigned URL: %s", type(e).__name__)
             raise
 
     def list_files(self, prefix: str = "") -> list[dict]:
@@ -184,7 +184,7 @@ class StorageService:
             )
             return response.get("Contents", [])
         except ClientError as e:
-            logger.error(f"Failed to list files: {e}")
+            logger.error("Failed to list files: %s", type(e).__name__)
             return []
 
     def file_exists(self, key: str) -> bool:
