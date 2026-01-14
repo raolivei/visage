@@ -1,0 +1,134 @@
+# Build and push Visage Web Docker image
+# 
+# Triggers:
+#   - Push to main/dev branches (paths: apps/web/**)
+#   - Git tags (v*)
+#   - Pull requests to main
+#   - Manual dispatch
+#
+# Images are pushed to ghcr.io/raolivei/visage-web
+# Built for ARM64 only (ElderTree cluster)
+
+name: Build Web
+
+on:
+  push:
+    branches: [main, dev]
+    tags: ["v*"]
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/build-web.yml"
+      - "VERSION"
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/web/**"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (e.g., v1.0.0)"
+        required: false
+        default: "latest"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/raolivei/visage-web
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: package-version
+        run: |
+          if [ -f VERSION ]; then
+            VERSION=$(cat VERSION | tr -d '[:space:]')
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Version: v$VERSION"
+          else
+            echo "version=0.1.0" >> $GITHUB_OUTPUT
+            echo "Version: v0.1.0 (default)"
+          fi
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern=v{{version}},value=v${{ steps.package-version.outputs.version }}
+            type=semver,pattern=v{{major}}.{{minor}},value=v${{ steps.package-version.outputs.version }}
+            type=semver,pattern=v{{major}},value=v${{ steps.package-version.outputs.version }}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ github.event.inputs.tag }},enable=${{ github.event.inputs.tag != '' }}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/web
+          file: ./apps/web/Dockerfile
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.package-version.outputs.version }}
+            BUILDTIME=${{ github.event.repository.updated_at }}
+            REVISION=${{ github.sha }}
+
+      - name: Scan image with Trivy
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          format: 'sarif'
+          output: 'trivy-web-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Upload Trivy results to GitHub Security
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-web-results.sarif'
+        continue-on-error: true
+
+      - name: Image digest
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success'
+        run: echo "Image pushed with digest ${{ steps.build.outputs.digest }}"
+
+      - name: Output image tags
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success'
+        run: |
+          echo "Image tags:"
+          echo "${{ steps.meta.outputs.tags }}" | tr ' ' '\n'

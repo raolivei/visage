@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: visage
+  labels:
+    app.kubernetes.io/name: visage
+    app.kubernetes.io/part-of: visage

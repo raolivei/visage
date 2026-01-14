@@ -1,0 +1,84 @@
+version: 2
+updates:
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Enable version updates for Docker - API
+  - package-ecosystem: "docker"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "docker"
+      - "component:api"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Enable version updates for Docker - Web
+  - package-ecosystem: "docker"
+    directory: "/apps/web"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "docker"
+      - "component:frontend"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Enable version updates for npm (frontend)
+  - package-ecosystem: "npm"
+    directory: "/apps/web"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "npm"
+      - "component:frontend"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Enable version updates for pip (API)
+  - package-ecosystem: "pip"
+    directory: "/apps/api"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+      - "component:api"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # Enable version updates for pip (Worker)
+  - package-ecosystem: "pip"
+    directory: "/apps/worker"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+      - "component:worker"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

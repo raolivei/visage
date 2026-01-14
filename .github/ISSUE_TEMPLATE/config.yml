@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Questions and Discussions
+    url: https://github.com/raolivei/visage/discussions
+    about: Ask questions or start a discussion about the project
+  - name: 📚 Documentation
+    url: https://github.com/raolivei/visage#readme
+    about: Check the README and documentation for setup and usage instructions
+  - name: 🔒 Security Vulnerability
+    url: https://github.com/raolivei/visage/security/advisories/new
+    about: Report a security vulnerability privately

@@ -1,0 +1,153 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly security scans
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # CodeQL Analysis for security vulnerabilities
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Languages used in this project
+        language: ['javascript', 'python']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: +security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  # Dependency vulnerability scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Scan npm dependencies (frontend)
+      - name: Run npm audit on frontend
+        run: |
+          if [ -f "apps/web/package-lock.json" ]; then
+            cd apps/web
+            npm audit --audit-level=moderate || true
+          fi
+        continue-on-error: true
+
+      # Scan Python dependencies (API)
+      - name: Run pip-audit on API
+        run: |
+          pip install pip-audit
+          if [ -f "apps/api/requirements.txt" ]; then
+            pip-audit --requirement apps/api/requirements.txt || true
+          fi
+        continue-on-error: true
+
+      # Scan Python dependencies (Worker)
+      - name: Run pip-audit on Worker
+        run: |
+          if [ -f "apps/worker/requirements.txt" ]; then
+            pip-audit --requirement apps/worker/requirements.txt || true
+          fi
+        continue-on-error: true
+
+  # Container image vulnerability scanning
+  container-scan:
+    name: Container Vulnerability Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Secret scanning (GitHub automatically does this, but we can add custom checks)
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run git-secrets check
+        run: |
+          # Check for common secret patterns in git history
+          # Note: GitHub automatically scans for secrets, this is a basic check
+          SECRET_PATTERNS="password|secret|api[_-]?key|token|private[_-]?key|aws[_-]?access[_-]?key|aws[_-]?secret|bearer[_-]?token|authorization|credential|private[_-]?key|ssh[_-]?key"
+          
+          if git log --all --full-history --source --pretty=format: -- . 2>/dev/null | grep -iE "$SECRET_PATTERNS" | head -1; then
+            echo "::warning::Potential secrets found in git history"
+            echo "⚠️  Warning: Potential secrets found in git history"
+            echo "Consider using git-secrets or BFG Repo-Cleaner to remove secrets"
+            echo "GitHub's secret scanning will also detect secrets automatically"
+          else
+            echo "✅ No obvious secrets found in recent commits"
+          fi
+          
+          # Check current files for hardcoded secrets (common patterns)
+          if find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" \) \
+            -not -path "*/node_modules/*" \
+            -not -path "*/venv/*" \
+            -not -path "*/.git/*" \
+            -not -path "*/.github/*" \
+            -exec grep -lE "(password\s*[:=]\s*['\"][^'\"]+['\"]|api[_-]?key\s*[:=]\s*['\"][^'\"]+['\"]|secret\s*[:=]\s*['\"][^'\"]+['\"])" {} \; 2>/dev/null | head -5; then
+            echo "::warning::Potential hardcoded secrets found in source files"
+            echo "⚠️  Review the files above for hardcoded credentials"
+          fi
+        continue-on-error: true

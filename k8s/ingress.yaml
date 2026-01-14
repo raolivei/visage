@@ -1,0 +1,60 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: visage-ingress
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: visage
+    app.kubernetes.io/part-of: visage
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: selfsigned-issuer
+spec:
+  tls:
+    - hosts:
+        - visage.eldertree.local
+      secretName: visage-tls
+  rules:
+    - host: visage.eldertree.local
+      http:
+        paths:
+          # API routes
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          - path: /redoc
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          # Frontend routes (catch-all)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-web
+                port:
+                  number: 3000

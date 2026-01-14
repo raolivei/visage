@@ -1,0 +1,25 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: visage
+
+resources:
+  - namespace.yaml
+  - externalsecrets.yaml
+  - postgres-pvc.yaml
+  - postgres-deployment.yaml
+  - redis-deployment.yaml
+  - api-deployment.yaml
+  - frontend-deployment.yaml
+  - ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/part-of: visage
+
+images:
+  - name: ghcr.io/raolivei/visage-api
+    newTag: latest
+  - name: ghcr.io/raolivei/visage-web
+    newTag: latest

@@ -1,0 +1,142 @@
+[
+  {
+    "name": "type:bug",
+    "color": "d73a4a",
+    "description": "Something isn't working (maps to fix/ branches)"
+  },
+  {
+    "name": "type:feature",
+    "color": "0e8a16",
+    "description": "New feature or request (maps to feature/ branches)"
+  },
+  {
+    "name": "type:infrastructure",
+    "color": "8e44ad",
+    "description": "Infrastructure changes (maps to infra/ branches)"
+  },
+  {
+    "name": "type:documentation",
+    "color": "0075ca",
+    "description": "Documentation improvements (maps to docs/ branches)"
+  },
+  {
+    "name": "type:chore",
+    "color": "c5def5",
+    "description": "Maintenance tasks (maps to chore/ branches)"
+  },
+  {
+    "name": "type:refactor",
+    "color": "fbca04",
+    "description": "Code refactoring (maps to refactor/ branches)"
+  },
+  {
+    "name": "type:test",
+    "color": "bfe5bf",
+    "description": "Adding or updating tests (maps to test/ branches)"
+  },
+  {
+    "name": "priority:critical",
+    "color": "b60205",
+    "description": "Critical priority - requires immediate attention"
+  },
+  {
+    "name": "priority:high",
+    "color": "d93f0b",
+    "description": "High priority - should be addressed soon"
+  },
+  {
+    "name": "priority:medium",
+    "color": "fbca04",
+    "description": "Medium priority - normal priority"
+  },
+  {
+    "name": "priority:low",
+    "color": "0e8a16",
+    "description": "Low priority - nice to have"
+  },
+  {
+    "name": "status:needs-triage",
+    "color": "f9d0c4",
+    "description": "Issue needs to be reviewed and triaged"
+  },
+  {
+    "name": "status:in-progress",
+    "color": "fbca04",
+    "description": "Work is actively being done on this issue"
+  },
+  {
+    "name": "status:blocked",
+    "color": "d93f0b",
+    "description": "Issue is blocked by another issue or dependency"
+  },
+  {
+    "name": "status:ready-for-review",
+    "color": "0e8a16",
+    "description": "Issue is ready for review or testing"
+  },
+  {
+    "name": "component:api",
+    "color": "1d76db",
+    "description": "Related to API/backend code"
+  },
+  {
+    "name": "component:frontend",
+    "color": "1d76db",
+    "description": "Related to frontend code"
+  },
+  {
+    "name": "component:worker",
+    "color": "1d76db",
+    "description": "Related to GPU worker code"
+  },
+  {
+    "name": "component:k8s",
+    "color": "326ce5",
+    "description": "Related to Kubernetes configuration"
+  },
+  {
+    "name": "component:docker",
+    "color": "0db7ed",
+    "description": "Related to Docker configuration"
+  },
+  {
+    "name": "component:ci-cd",
+    "color": "2088ff",
+    "description": "Related to CI/CD pipelines"
+  },
+  {
+    "name": "component:ai-ml",
+    "color": "9b59b6",
+    "description": "Related to AI/ML pipeline (LoRA, diffusion, etc.)"
+  },
+  {
+    "name": "dependencies",
+    "color": "0366d6",
+    "description": "Pull requests that update a dependency file"
+  },
+  {
+    "name": "github-actions",
+    "color": "000000",
+    "description": "Pull requests that update GitHub Actions"
+  },
+  {
+    "name": "docker",
+    "color": "0db7ed",
+    "description": "Pull requests that update Docker files"
+  },
+  {
+    "name": "npm",
+    "color": "cb3837",
+    "description": "Pull requests that update npm packages"
+  },
+  {
+    "name": "python",
+    "color": "3776ab",
+    "description": "Pull requests that update Python packages"
+  },
+  {
+    "name": "security",
+    "color": "ee0701",
+    "description": "Security-related issues or updates"
+  }
+]

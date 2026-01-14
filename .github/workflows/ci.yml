@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  # Linting and code quality checks
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Python linting for API
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python linting tools
+        run: |
+          pip install ruff mypy black
+
+      - name: Run Python linting on API
+        run: |
+          cd apps/api
+          ruff check src/ || true
+          mypy src/ --ignore-missing-imports || true
+        continue-on-error: true
+
+      - name: Run Python linting on Worker
+        run: |
+          cd apps/worker
+          ruff check src/ || true
+          mypy src/ --ignore-missing-imports || true
+        continue-on-error: true
+
+      # Node.js linting for Web
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        run: |
+          cd apps/web
+          npm ci || npm install
+
+      - name: Run frontend linting
+        run: |
+          cd apps/web
+          if grep -q '"lint"' package.json; then
+            npm run lint || true
+          fi
+        continue-on-error: true
+
+  # Type checking
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          pip install mypy
+          if [ -f "apps/api/requirements.txt" ]; then
+            pip install -r apps/api/requirements.txt || true
+          fi
+
+      - name: Run Python type checking on API
+        run: |
+          cd apps/api
+          mypy src/ --ignore-missing-imports || true
+        continue-on-error: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Run TypeScript type checking
+        run: |
+          cd apps/web
+          npm ci || npm install
+          if grep -q '"type-check"' package.json; then
+            npm run type-check || true
+          else
+            npx tsc --noEmit || true
+          fi
+        continue-on-error: true
+
+  # Tests
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Python tests for API
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python test dependencies
+        run: |
+          pip install pytest pytest-cov
+          if [ -f "apps/api/requirements.txt" ]; then
+            pip install -r apps/api/requirements.txt || true
+          fi
+          if [ -f "apps/api/requirements-dev.txt" ]; then
+            pip install -r apps/api/requirements-dev.txt || true
+          fi
+
+      - name: Run Python tests
+        run: |
+          cd apps/api
+          if [ -d "tests" ] || find . -name "test_*.py" | grep -q .; then
+            pytest --cov=src --cov-report=xml --cov-report=term || true
+          else
+            echo "No tests found, skipping"
+          fi
+        continue-on-error: true
+
+      # Node.js tests for Web
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Run frontend tests
+        run: |
+          cd apps/web
+          npm ci || npm install
+          if grep -q '"test"' package.json; then
+            npm test || true
+          else
+            echo "No test script found, skipping"
+          fi
+        continue-on-error: true
+
+  # Build verification
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/api
+          file: ./apps/api/Dockerfile
+          push: false
+          tags: ghcr.io/raolivei/visage-api:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Web Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/web
+          file: ./apps/web/Dockerfile
+          push: false
+          tags: ghcr.io/raolivei/visage-web:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

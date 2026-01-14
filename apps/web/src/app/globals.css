@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom font imports */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+:root {
+  --font-cabinet: 'DM Sans', system-ui, sans-serif;
+  
+  /* Background gradient */
+  --bg-gradient: linear-gradient(
+    135deg,
+    theme('colors.visage.950') 0%,
+    theme('colors.visage.900') 50%,
+    theme('colors.visage.950') 100%
+  );
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-visage-950 text-visage-100;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-visage-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-visage-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-visage-600;
+  }
+}
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-visage-900/50 backdrop-blur-xl border border-visage-800/50 rounded-2xl;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 
+           bg-accent-500 hover:bg-accent-400 
+           text-visage-950 font-semibold rounded-xl
+           transition-all duration-200 ease-out
+           shadow-lg shadow-accent-500/25
+           hover:shadow-xl hover:shadow-accent-500/30
+           active:scale-[0.98];
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3
+           bg-visage-800 hover:bg-visage-700
+           text-visage-100 font-medium rounded-xl
+           border border-visage-700 hover:border-visage-600
+           transition-all duration-200 ease-out
+           active:scale-[0.98];
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2
+           text-visage-300 hover:text-visage-100
+           hover:bg-visage-800/50 rounded-lg
+           transition-all duration-200 ease-out;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full px-4 py-3 
+           bg-visage-900/50 border border-visage-700
+           rounded-xl text-visage-100 placeholder:text-visage-500
+           focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500/50
+           transition-all duration-200;
+  }
+
+  /* Upload dropzone */
+  .dropzone {
+    @apply relative flex flex-col items-center justify-center
+           w-full min-h-[300px] p-8
+           border-2 border-dashed border-visage-700
+           rounded-2xl cursor-pointer
+           bg-visage-900/30 hover:bg-visage-900/50
+           hover:border-accent-500/50
+           transition-all duration-300 ease-out;
+  }
+
+  .dropzone.active {
+    @apply border-accent-500 bg-accent-500/10;
+  }
+
+  /* Photo grid item */
+  .photo-card {
+    @apply relative aspect-square overflow-hidden rounded-xl
+           bg-visage-800 border border-visage-700
+           group cursor-pointer
+           transition-all duration-300 ease-out
+           hover:border-accent-500/50 hover:shadow-lg hover:shadow-accent-500/10;
+  }
+
+  /* Status badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5
+           text-xs font-medium rounded-full;
+  }
+
+  .badge-pending {
+    @apply bg-visage-700 text-visage-300;
+  }
+
+  .badge-processing {
+    @apply bg-blue-500/20 text-blue-400;
+  }
+
+  .badge-success {
+    @apply bg-green-500/20 text-green-400;
+  }
+
+  .badge-error {
+    @apply bg-red-500/20 text-red-400;
+  }
+}
+
+@layer utilities {
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent;
+  }
+
+  /* Glow effects */
+  .glow-accent {
+    box-shadow: 0 0 40px theme('colors.accent.500 / 20%');
+  }
+
+  /* Animation delays */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
+  .delay-500 { animation-delay: 500ms; }
+}

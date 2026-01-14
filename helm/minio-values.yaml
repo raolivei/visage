@@ -1,0 +1,112 @@
+# MinIO Helm Values for Visage
+# 
+# Deploy with:
+#   helm repo add bitnami https://charts.bitnami.com/bitnami
+#   helm upgrade --install visage-minio bitnami/minio \
+#     --namespace visage \
+#     -f helm/minio-values.yaml
+
+## @section MinIO configuration
+
+## MinIO mode: standalone or distributed
+## For ElderTree (3 nodes), standalone is sufficient for this use case
+mode: standalone
+
+## Authentication
+auth:
+  ## Use existing secret for root credentials
+  existingSecret: visage-minio-secret
+  rootUserSecretKey: access-key
+  rootPasswordSecretKey: secret-key
+
+## Default buckets to create
+defaultBuckets: "visage"
+
+## Resource limits for Raspberry Pi
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+## Persistence
+persistence:
+  enabled: true
+  storageClass: longhorn
+  size: 20Gi
+  accessModes:
+    - ReadWriteOnce
+
+## Service configuration
+service:
+  type: ClusterIP
+  ports:
+    api: 9000
+    console: 9001
+
+## Ingress for MinIO Console (optional)
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  hostname: minio.eldertree.local
+  path: /
+  pathType: Prefix
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: selfsigned-issuer
+  tls: true
+  extraTls:
+    - hosts:
+        - minio.eldertree.local
+      secretName: minio-tls
+
+## API Ingress
+apiIngress:
+  enabled: true
+  ingressClassName: traefik
+  hostname: minio-api.eldertree.local
+  path: /
+  pathType: Prefix
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: selfsigned-issuer
+  tls: true
+  extraTls:
+    - hosts:
+        - minio-api.eldertree.local
+      secretName: minio-api-tls
+
+## Disable metrics for lower resource usage
+metrics:
+  enabled: false
+
+## Pod settings
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
+
+## Affinity - prefer different nodes
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: minio
+          topologyKey: kubernetes.io/hostname
+
+## Tolerations for ARM nodes
+tolerations: []
+
+## Node selector for specific nodes (optional)
+nodeSelector: {}

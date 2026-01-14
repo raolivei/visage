@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visage-api
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: visage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api
+      app.kubernetes.io/part-of: visage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/part-of: visage
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/raolivei/visage-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: visage-postgres-secret
+                  key: database-url
+            - name: REDIS_URL
+              value: redis://visage-redis:6379
+            - name: MINIO_ENDPOINT
+              value: visage-minio:9000
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: visage-minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: visage-minio-secret
+                  key: secret-key
+            - name: MINIO_BUCKET
+              value: visage
+            - name: MINIO_SECURE
+              value: "false"
+            - name: CORS_ORIGINS
+              value: '["https://visage.eldertree.local", "http://localhost:3004"]'
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: ghcr-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: visage-api
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: visage
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: http
+  selector:
+    app.kubernetes.io/name: api
+    app.kubernetes.io/part-of: visage
