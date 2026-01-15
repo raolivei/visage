@@ -3,6 +3,7 @@ Pydantic Schemas
 
 Request/Response models for the API.
 """
+from __future__ import annotations
 
 from datetime import datetime
 from uuid import UUID

@@ -3,6 +3,7 @@ Queue Service
 
 Redis-based job queue for background processing.
 """
+from __future__ import annotations
 
 import json
 import logging
@@ -12,7 +13,7 @@ from uuid import UUID
 
 import redis
 
-from ..config import get_settings
+from src.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
