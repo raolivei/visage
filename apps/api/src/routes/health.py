@@ -11,10 +11,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_db
-from ..schemas import HealthResponse
-from ..services.queue import get_queue_service
-from ..services.storage import get_storage_service
+from src.database import get_db
+from src.schemas import HealthResponse
+from src.services.queue import get_queue_service
+from src.services.storage import get_storage_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["health"])
