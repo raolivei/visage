@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.config import get_settings
 from src.database import close_db, init_db
@@ -62,6 +63,9 @@ app.add_middleware(
 # Include routers
 app.include_router(health_router)
 app.include_router(packs_router, prefix=settings.api_prefix)
+
+# Prometheus metrics endpoint
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 
 @app.get("/")
