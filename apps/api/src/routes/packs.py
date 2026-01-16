@@ -6,7 +6,13 @@ Endpoints for managing headshot packs.
 from __future__ import annotations
 
 import logging
+import re
 import uuid
+
+
+def sanitize_for_log(value: str) -> str:
+    """Sanitize a value for safe logging (prevent log injection)."""
+    return re.sub(r'[\r\n\t]', '', str(value))
 from pathlib import Path
 from typing import Annotated
 
@@ -192,7 +198,7 @@ async def delete_pack(
     # Delete from database (cascades to photos, jobs, outputs)
     await db.delete(pack)
     
-    logger.info("Deleted pack %s", str(pack_id))
+    logger.info("Deleted pack %s", sanitize_for_log(pack_id))
 
 
 # ============================================================================
@@ -394,7 +400,7 @@ async def start_generation(
     # Update pack status
     pack.status = PackStatus.TRAINING
     
-    logger.info("Started generation for pack %s, job %s", str(pack_id), str(job.id))
+    logger.info("Started generation for pack %s, job %s", sanitize_for_log(pack_id), sanitize_for_log(job.id))
     
     job_response = JobResponse(
         id=job.id,

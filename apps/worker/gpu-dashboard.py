@@ -60,6 +60,7 @@ def get_job_progress():
                 'job_type': data.get('job_type', 'unknown')
             }
     except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError, ValueError, IndexError):
+        # Silently ignore Redis connection errors - dashboard should continue running
         pass
     return {'progress': '0', 'step': 'Waiting...', 'status': 'unknown', 'job_type': 'unknown'}
 
@@ -151,6 +152,7 @@ def main():
             time.sleep(2)
             
     except KeyboardInterrupt:
+        # User pressed Ctrl+C to exit - this is expected, not an error
         pass
     finally:
         # Show cursor and clean exit
