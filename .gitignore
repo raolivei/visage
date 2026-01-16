@@ -44,8 +44,8 @@ logs/
 *.db
 *.sqlite
 
-# ML Models (large files)
-models/
+# ML Models (large files) - only in worker
+apps/worker/models/
 *.ckpt
 *.safetensors
 *.pt
