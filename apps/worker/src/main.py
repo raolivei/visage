@@ -22,11 +22,8 @@ from .storage import get_storage_client
 from .pipeline import LoRATrainer, ImageGenerator, QualityFilter
 from .metrics import (
     start_metrics_server,
-    update_training_progress,
     update_job_status,
     record_job_duration,
-    record_image_generated,
-    record_image_filtered,
     update_queue_metrics,
     jobs_in_progress,
 )

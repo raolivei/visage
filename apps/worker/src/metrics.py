@@ -9,7 +9,7 @@ Supports two modes:
 from prometheus_client import (
     Counter, Gauge, Histogram, Info, 
     start_http_server, push_to_gateway,
-    CollectorRegistry, REGISTRY
+    REGISTRY
 )
 import threading
 import time

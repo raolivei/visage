@@ -8,10 +8,9 @@ Supports checkpointing for crash recovery and resume.
 import logging
 import json
 import time
-import os
 from pathlib import Path
 from typing import Callable, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import torch
 from PIL import Image
@@ -215,14 +214,49 @@ class LoRATrainer:
         logger.info(f"LoRA configured: rank={self.config.lora_rank}, alpha={self.config.lora_alpha}")
         
     def _generate_caption(self, image_path: Path, trigger_token: str, index: int) -> str:
-        """Generate training caption for an image."""
-        # Basic captioning - in production, use BLIP or similar
+        """
+        Generate training caption for an image.
+        
+        Uses professional photography terminology and varied descriptions
+        to help the model learn diverse contexts while maintaining identity.
+        """
+        # Professional headshot captions with photography terminology
         variations = [
-            f"a photo of {trigger_token} person, professional headshot, facing camera, studio lighting",
-            f"a portrait of {trigger_token} person, high quality, sharp focus, natural expression",
-            f"a professional photograph of {trigger_token} person, well-lit, clean background",
-            f"a headshot photo of {trigger_token} person, business portrait style",
-            f"{trigger_token} person, professional portrait, excellent lighting, detailed face",
+            # Studio/corporate styles
+            f"a professional corporate headshot photograph of {trigger_token} person, "
+            "Rembrandt lighting, shallow depth of field, 85mm lens, Canon 5D, "
+            "neutral gray background, sharp focus on eyes, high resolution",
+            
+            f"a high-end executive portrait of {trigger_token} person, "
+            "soft key light with fill, professional studio setup, "
+            "clean white background, confident expression, detailed skin texture",
+            
+            f"editorial portrait photograph of {trigger_token} person, "
+            "natural window light, f/2.8 aperture, bokeh background, "
+            "authentic expression, magazine quality, 4K detail",
+            
+            # LinkedIn/business styles
+            f"a LinkedIn professional headshot of {trigger_token} person, "
+            "soft diffused lighting, warm color temperature, "
+            "approachable expression, business casual, sharp details",
+            
+            f"modern business portrait of {trigger_token} person, "
+            "ring light setup, clean contemporary background, "
+            "friendly professional demeanor, high definition",
+            
+            # Creative/natural styles
+            f"a natural light portrait of {trigger_token} person, "
+            "golden hour lighting, outdoor setting, "
+            "genuine smile, professional photography, DSLR quality",
+            
+            f"environmental portrait of {trigger_token} person, "
+            "cinematic color grading, soft shadows, "
+            "natural pose, detailed facial features, 8K resolution",
+            
+            # Technical/detailed styles
+            f"studio portrait photograph of {trigger_token} person, "
+            "three-point lighting setup, medium format quality, "
+            "perfect skin detail, catchlights in eyes, neutral expression",
         ]
         return variations[index % len(variations)]
         
