@@ -556,11 +556,18 @@ async def rate_output(
     
     await db.flush()
     
+    # Sanitize reason before logging to prevent log injection via control characters
+    sanitized_reason = (
+        data.reason.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+        if data.reason
+        else ""
+    )
+    
     # Normalize output_id before logging to avoid any possibility of log injection
     safe_output_id = str(output_id).replace("\r", "").replace("\n", "")
     
     logger.info(
-        "Output %s rated: %s%s",
+        f" - {sanitized_reason}" if sanitized_reason else "",
         safe_output_id,
         "👍" if data.rating else "👎",
         f" - {data.reason}" if data.reason else "",
