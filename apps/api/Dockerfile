@@ -39,7 +39,8 @@ ENV PATH=/home/appuser/.local/bin:$PATH
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8000
