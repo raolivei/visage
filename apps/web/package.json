@@ -16,7 +16,7 @@
     "react-dropzone": "^14.2.3",
     "lucide-react": "^0.562.0",
     "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.1"
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
