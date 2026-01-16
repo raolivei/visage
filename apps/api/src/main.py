@@ -10,9 +10,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import get_settings
-from .database import close_db, init_db
-from .routes import health_router, packs_router
+from src.config import get_settings
+from src.database import close_db, init_db
+from src.routes import health_router, packs_router
 
 # Configure logging
 logging.basicConfig(

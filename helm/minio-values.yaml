@@ -8,6 +8,12 @@
 
 ## @section MinIO configuration
 
+## Use specific image tags known to work with ARM64
+image:
+  registry: docker.io
+  repository: bitnami/minio
+  tag: 2024.11.7-debian-12-r0
+
 ## MinIO mode: standalone or distributed
 ## For ElderTree (3 nodes), standalone is sufficient for this use case
 mode: standalone
@@ -56,7 +62,7 @@ ingress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    cert-manager.io/cluster-issuer: selfsigned-issuer
+    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
   tls: true
   extraTls:
     - hosts:
@@ -73,7 +79,7 @@ apiIngress:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    cert-manager.io/cluster-issuer: selfsigned-issuer
+    cert-manager.io/cluster-issuer: selfsigned-cluster-issuer
   tls: true
   extraTls:
     - hosts:

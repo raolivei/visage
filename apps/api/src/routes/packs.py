@@ -3,6 +3,7 @@ Pack Routes
 
 Endpoints for managing headshot packs.
 """
+from __future__ import annotations
 
 import logging
 import uuid
@@ -13,12 +14,12 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import get_settings
-from ..database import get_db
-from ..models import Job, Output, Pack, Photo
-from ..models.job import JobStatus, JobType
-from ..models.pack import PackStatus
-from ..schemas import (
+from src.config import get_settings
+from src.database import get_db
+from src.models import Job, Output, Pack, Photo
+from src.models.job import JobStatus, JobType
+from src.models.pack import PackStatus
+from src.schemas import (
     GenerateRequest,
     JobCreateResponse,
     JobResponse,
@@ -33,8 +34,8 @@ from ..schemas import (
     StyleListResponse,
     StylePreset,
 )
-from ..services.queue import get_queue_service
-from ..services.storage import get_storage_service
+from src.services.queue import get_queue_service
+from src.services.storage import get_storage_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

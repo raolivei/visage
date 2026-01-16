@@ -3,6 +3,7 @@ Storage Service
 
 S3-compatible object storage client for MinIO.
 """
+from __future__ import annotations
 
 import io
 import logging
@@ -12,7 +13,7 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
-from ..config import get_settings
+from src.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
