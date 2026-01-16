@@ -6,7 +6,8 @@ namespace: visage
 
 resources:
   - namespace.yaml
-  - externalsecrets.yaml
+  # - externalsecrets.yaml  # Disabled - using K8s secrets directly
+  - minio-deployment.yaml
   - postgres-pvc.yaml
   - postgres-deployment.yaml
   - redis-deployment.yaml

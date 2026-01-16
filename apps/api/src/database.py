@@ -7,7 +7,7 @@ SQLAlchemy async engine and session management.
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
-from .config import get_settings
+from src.config import get_settings
 
 settings = get_settings()
 
