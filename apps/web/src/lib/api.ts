@@ -63,6 +63,9 @@ export interface Output {
   style_preset: string | null;
   score: number | null;
   is_selected: boolean;
+  user_rating: boolean | null;  // true=thumbs up, false=thumbs down, null=unrated
+  rating_reason: string | null;
+  rated_at: string | null;
   created_at: string;
 }
 
@@ -70,6 +73,16 @@ export interface OutputListResponse {
   outputs: Output[];
   total: number;
   selected_count: number;
+  liked_count: number;
+  disliked_count: number;
+}
+
+export interface RatingResponse {
+  id: string;
+  user_rating: boolean;
+  rating_reason: string | null;
+  rated_at: string;
+  message: string;
 }
 
 export interface StylePreset {
@@ -212,6 +225,18 @@ class ApiClient {
     outputId: string
   ): Promise<{ url: string; expires_in: number }> {
     return this.fetch(`/api/packs/${packId}/outputs/${outputId}/url`);
+  }
+
+  async rateOutput(
+    packId: string,
+    outputId: string,
+    rating: boolean,
+    reason?: string
+  ): Promise<RatingResponse> {
+    return this.fetch(`/api/packs/${packId}/outputs/${outputId}/rate`, {
+      method: "POST",
+      body: JSON.stringify({ rating, reason }),
+    });
   }
 
   // Styles

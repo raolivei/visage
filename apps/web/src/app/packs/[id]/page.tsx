@@ -12,6 +12,8 @@ import {
   Clock,
   Image as ImageIcon,
   Sparkles,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, Pack, Photo, Job, Output } from "@/lib/api";
@@ -96,6 +98,30 @@ export default function PackDetailPage() {
     }
   }
 
+  async function handleRateOutput(
+    outputId: string,
+    rating: boolean,
+    e: React.MouseEvent
+  ) {
+    e.stopPropagation(); // Prevent triggering selection
+    try {
+      const response = await api.rateOutput(packId, outputId, rating);
+      setOutputs((prev) =>
+        prev.map((o) =>
+          o.id === outputId
+            ? {
+                ...o,
+                user_rating: response.user_rating,
+                rated_at: response.rated_at,
+              }
+            : o
+        )
+      );
+    } catch (err) {
+      console.error("Failed to rate output:", err);
+    }
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto px-6 py-16 text-center">
@@ -130,6 +156,8 @@ export default function PackDetailPage() {
     (j) => j.status === "running" || j.status === "pending"
   );
   const selectedCount = outputs.filter((o) => o.is_selected).length;
+  const likedCount = outputs.filter((o) => o.user_rating === true).length;
+  const dislikedCount = outputs.filter((o) => o.user_rating === false).length;
 
   return (
     <div className="container mx-auto px-6 py-12">
@@ -325,9 +353,17 @@ export default function PackDetailPage() {
                 Generated Headshots ({outputs.length})
               </h2>
               {outputs.length > 0 && (
-                <span className="text-sm text-visage-400">
-                  {selectedCount} selected
-                </span>
+                <div className="flex items-center gap-4 text-sm text-visage-400">
+                  <span className="flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4 text-green-400" />
+                    {likedCount}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <ThumbsDown className="w-4 h-4 text-red-400" />
+                    {dislikedCount}
+                  </span>
+                  <span>{selectedCount} selected</span>
+                </div>
               )}
             </div>
 
@@ -352,19 +388,22 @@ export default function PackDetailPage() {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {outputs.map((output) => (
-                  <button
+                  <div
                     key={output.id}
-                    onClick={() =>
-                      handleToggleSelect(output.id, output.is_selected)
-                    }
                     className={cn(
-                      "photo-card aspect-square",
+                      "photo-card aspect-square relative group",
                       output.is_selected && "ring-2 ring-accent-500"
                     )}
                   >
-                    <div className="w-full h-full flex items-center justify-center text-visage-600">
+                    {/* Main clickable area for selection */}
+                    <button
+                      onClick={() =>
+                        handleToggleSelect(output.id, output.is_selected)
+                      }
+                      className="w-full h-full flex items-center justify-center text-visage-600"
+                    >
                       <ImageIcon className="w-8 h-8" />
-                    </div>
+                    </button>
 
                     {/* Selection indicator */}
                     <div
@@ -380,6 +419,41 @@ export default function PackDetailPage() {
                       )}
                     </div>
 
+                    {/* Rating buttons - show on hover or if rated */}
+                    <div
+                      className={cn(
+                        "absolute top-2 left-2 flex gap-1 transition-opacity",
+                        output.user_rating === null
+                          ? "opacity-0 group-hover:opacity-100"
+                          : "opacity-100"
+                      )}
+                    >
+                      <button
+                        onClick={(e) => handleRateOutput(output.id, true, e)}
+                        className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center transition-all",
+                          output.user_rating === true
+                            ? "bg-green-500 text-white"
+                            : "bg-visage-900/80 text-visage-400 hover:bg-green-500/20 hover:text-green-400"
+                        )}
+                        title="Like this photo"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => handleRateOutput(output.id, false, e)}
+                        className={cn(
+                          "w-7 h-7 rounded-full flex items-center justify-center transition-all",
+                          output.user_rating === false
+                            ? "bg-red-500 text-white"
+                            : "bg-visage-900/80 text-visage-400 hover:bg-red-500/20 hover:text-red-400"
+                        )}
+                        title="Dislike this photo"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                    </div>
+
                     {/* Score */}
                     {output.score && (
                       <div className="absolute bottom-2 left-2 px-2 py-1 bg-visage-900/80 rounded text-xs text-visage-300">
@@ -393,7 +467,7 @@ export default function PackDetailPage() {
                         {output.style_preset}
                       </div>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             )}

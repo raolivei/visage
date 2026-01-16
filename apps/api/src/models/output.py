@@ -51,6 +51,11 @@ class Output(Base):
     is_selected = Column(Boolean, default=False)  # User selected for download
     is_filtered_out = Column(Boolean, default=False)  # Failed quality check
     
+    # User feedback/rating
+    user_rating = Column(Boolean, nullable=True)  # True=thumbs up, False=thumbs down, None=unrated
+    rating_reason = Column(Text, nullable=True)  # Optional feedback text
+    rated_at = Column(DateTime, nullable=True)  # When the rating was submitted
+    
     # Additional metadata
     generation_metadata = Column(JSONB, default=dict)  # Generation params, etc.
     
