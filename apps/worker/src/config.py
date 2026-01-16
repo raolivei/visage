@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     # Polling
     poll_interval: float = 5.0  # seconds
     
+    # Metrics
+    pushgateway_url: str = ""  # Empty = local HTTP server, set to pushgateway URL for remote
+    metrics_push_interval: float = 15.0  # seconds
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
