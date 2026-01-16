@@ -1,0 +1,108 @@
+# Visage - Cursor Rules
+
+## Workspace
+
+See `../workspace-config/docs/PROJECT_CONVENTIONS.md` for shared conventions (git workflow, CHANGELOG, Docker/GHCR, K8s, security).
+
+**Ports** (from `../workspace-config/ports/.env.ports`):
+
+- Web: `3004`
+- API: `8004`
+- PostgreSQL: `5436`
+- Redis: `6383`
+- MinIO: `9000`
+
+## Commands
+
+```bash
+# Development (Docker Compose - recommended)
+source ../workspace-config/ports/.env.ports
+docker-compose up -d postgres redis minio  # Infrastructure
+docker-compose up api web                   # Services
+
+# Alternative: Local development
+cd apps/api && python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn src.main:app --reload --port 8004
+
+cd apps/web && npm install && npm run dev
+
+# Worker (Mac with GPU - runs outside cluster)
+cd apps/worker && python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python -m src.main
+
+# Testing
+cd apps/api && pytest
+cd apps/web && npm test
+
+# Linting (run after changes)
+cd apps/api && ruff check . && ruff format .
+cd apps/web && npm run lint && npm run format
+```
+
+## Workflow
+
+1. Always lint/format after code changes
+2. Run tests before committing
+3. Update CHANGELOG.md for all changes
+4. Never run git commands at workspace root
+
+## Project Overview
+
+Self-hosted AI headshot generator using SDXL + per-user LoRA training. Orchestration on **eldertree** k3s cluster, GPU compute on Mac with Apple Silicon.
+
+```
+visage/
+├── apps/
+│   ├── api/           # FastAPI backend (orchestration)
+│   ├── web/           # Next.js frontend (upload/gallery)
+│   └── worker/        # GPU worker (SDXL + LoRA, runs on Mac)
+├── packages/
+│   └── shared/        # Shared types, prompt templates
+├── k8s/               # Kubernetes manifests (cluster services)
+└── helm/              # Helm values (MinIO)
+```
+
+## Code Style
+
+**Python (API/Worker)**: See `apps/api/src/routes/packs.py` for route patterns. Use Pydantic for validation.
+
+**TypeScript (Web)**: See `apps/web/src/components/` for component patterns. Use Tailwind CSS.
+
+## Architecture
+
+- **Cluster (ARM64)**: API, Web, Redis, MinIO run on eldertree
+- **Mac (Apple Silicon)**: Worker with SDXL + LoRA runs locally, connects to cluster services
+- **Queue**: Redis for job queue between API and Worker
+- **Storage**: MinIO (S3-compatible) for photos and outputs
+
+## Common Tasks
+
+### Adding Style Preset
+
+1. Add preset config to `packages/shared/prompts/`
+2. Update worker pipeline in `apps/worker/src/pipeline/`
+3. Add UI option in `apps/web/`
+
+### Testing Worker Locally
+
+```bash
+cd apps/worker
+export API_URL=http://localhost:8004
+export REDIS_URL=redis://localhost:6383
+export MINIO_ENDPOINT=localhost:9000
+python -m src.main
+```
+
+## Docker Images
+
+- API: `ghcr.io/raolivei/visage-api:<tag>`
+- Web: `ghcr.io/raolivei/visage-web:<tag>`
+
+## Key Design Decisions
+
+- **Hybrid Architecture**: Cluster for orchestration, Mac for GPU
+- **Per-User LoRA**: Personalized model fine-tuning
+- **Quality Over Quantity**: Generate many, deliver few (auto-filtering)
+- **Self-Hosted**: No cloud AI costs
