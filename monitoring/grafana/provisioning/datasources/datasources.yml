@@ -1,0 +1,30 @@
+# Grafana datasource provisioning
+apiVersion: 1
+
+# Delete existing datasources to avoid conflicts
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Redis
+    orgId: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9091
+    uid: prometheus
+    orgId: 1
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: "5s"
+
+  - name: Redis  
+    type: redis-datasource
+    access: proxy
+    url: redis://redis:6379
+    uid: redis
+    orgId: 1
+    editable: true

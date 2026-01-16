@@ -20,6 +20,16 @@ from .config import get_settings, get_device
 from .queue import get_queue_client
 from .storage import get_storage_client
 from .pipeline import LoRATrainer, ImageGenerator, QualityFilter
+from .metrics import (
+    start_metrics_server,
+    update_training_progress,
+    update_job_status,
+    record_job_duration,
+    record_image_generated,
+    record_image_filtered,
+    update_queue_metrics,
+    jobs_in_progress,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -299,6 +309,15 @@ def main():
     console.print(f"Redis: {settings.redis_url}")
     console.print("")
     
+    # Start Prometheus metrics server
+    start_metrics_server(
+        port=9090,
+        worker_id=settings.worker_id,
+        device=get_device()
+    )
+    console.print(f"Metrics: http://localhost:9090/metrics")
+    console.print("")
+    
     queue = get_queue_client()
     storage = get_storage_client()
     
@@ -316,28 +335,46 @@ def main():
             job = queue.dequeue()
             
             if job is None:
+                # Update queue metrics
+                update_queue_metrics({"train": 0, "generate": 0}, 0)
                 # No jobs, wait and retry
                 time.sleep(settings.poll_interval)
                 continue
             
             job_id = job["id"]
-            job_type = job.get("type")
+            job_type = job.get("type", "unknown")
             pack_id = job.get("pack_id")
             
             logger.info(f"Processing job {job_id} (type={job_type}, pack={pack_id})")
             
+            # Update metrics
+            update_job_status(job_type, "processing", in_progress=True)
+            jobs_in_progress.labels(job_type=job_type).set(1)
+            job_start_time = time.time()
+            
             try:
                 result = process_job(job, queue, storage)
                 queue.complete_job(job_id, result=result)
+                
+                # Record success metrics
+                job_duration = time.time() - job_start_time
+                record_job_duration(job_type, job_duration)
+                update_job_status(job_type, "completed", in_progress=False)
                 
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Job {job_id} failed: {error_msg}")
                 queue.complete_job(job_id, error=error_msg)
                 
+                # Record failure metrics
+                update_job_status(job_type, "failed", in_progress=False)
+                
                 # Update pack status to failed
                 if pack_id:
                     update_pack_status(pack_id, "failed", error_msg)
+            
+            finally:
+                jobs_in_progress.labels(job_type=job_type).set(0)
                     
         except KeyboardInterrupt:
             break

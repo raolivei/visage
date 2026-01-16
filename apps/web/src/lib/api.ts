@@ -1,6 +1,6 @@
 /**
  * Visage API Client
- * 
+ *
  * Type-safe client for the Visage API.
  */
 
@@ -100,7 +100,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -143,7 +143,10 @@ class ApiClient {
   }
 
   // Photos
-  async uploadPhotos(packId: string, files: File[]): Promise<PhotoUploadResponse> {
+  async uploadPhotos(
+    packId: string,
+    files: File[]
+  ): Promise<PhotoUploadResponse> {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 

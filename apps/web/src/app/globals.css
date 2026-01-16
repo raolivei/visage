@@ -8,7 +8,7 @@
    ============================================================================ */
 
 /* Font imports */
-@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* ============================================================================
    CSS CUSTOM PROPERTIES
@@ -19,32 +19,32 @@
   --color-background-secondary: #111113;
   --color-background-tertiary: #18181b;
   --color-background-elevated: #1f1f23;
-  
+
   --color-foreground: #fafaf9;
   --color-foreground-secondary: #a8a8a3;
   --color-foreground-tertiary: #71716b;
-  
+
   --color-accent: #d4a574;
   --color-accent-muted: #b8956a;
   --color-accent-subtle: rgba(212, 165, 116, 0.15);
-  
+
   --color-border: #27272a;
   --color-border-subtle: #1f1f23;
   --color-border-accent: rgba(212, 165, 116, 0.3);
-  
+
   /* Typography */
-  --font-display: 'Libre Baskerville', Georgia, serif;
-  --font-body: 'DM Sans', Inter, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
+  --font-display: "Libre Baskerville", Georgia, serif;
+  --font-body: "DM Sans", Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
   /* Spacing */
   --space-unit: 0.25rem;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 300ms ease;
   --transition-slow: 500ms ease;
-  
+
   /* Shadows */
   --shadow-glow: 0 0 40px rgba(212, 165, 116, 0.15);
 }
@@ -65,9 +65,11 @@
     font-feature-settings: "cv11", "ss01";
     min-height: 100vh;
   }
-  
+
   /* Headings use display font */
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     @apply font-display;
   }
 
@@ -199,7 +201,7 @@
   .logo-wordmark {
     @apply font-display font-normal tracking-logo;
   }
-  
+
   .logo-uppercase {
     @apply font-sans font-medium tracking-logo-caps uppercase;
   }
@@ -229,23 +231,37 @@
   }
 
   /* Animation delays for staggered reveals */
-  .delay-75 { animation-delay: 75ms; }
-  .delay-100 { animation-delay: 100ms; }
-  .delay-150 { animation-delay: 150ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-  
+  .delay-75 {
+    animation-delay: 75ms;
+  }
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  .delay-150 {
+    animation-delay: 150ms;
+  }
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
   /* Prose styling for content */
   .prose-visage {
     @apply text-foreground-secondary leading-relaxed;
   }
-  
+
   .prose-visage strong {
     @apply text-foreground font-semibold;
   }
-  
+
   .prose-visage a {
     @apply text-accent hover:text-accent-muted underline underline-offset-2;
   }

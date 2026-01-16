@@ -68,6 +68,7 @@ npm test
 ### Branch Naming
 
 Use descriptive branch names:
+
 - `feature/description` - New features
 - `fix/description` - Bug fixes
 - `docs/description` - Documentation updates
@@ -81,20 +82,23 @@ Use descriptive branch names:
 2. **Write/update tests** if applicable
 3. **Update documentation** if needed
 4. **Run tests locally**:
+
    ```bash
    # Python
    cd apps/api && pytest
-   
+
    # Node.js
    cd apps/web && npm test
    ```
+
 5. **Run linters**:
+
    ```bash
    # Python
    cd apps/api
    ruff check src/
    mypy src/ --ignore-missing-imports
-   
+
    # Node.js
    cd apps/web
    npm run lint
@@ -113,6 +117,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -123,6 +128,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 - `infra`: Infrastructure changes
 
 **Scopes:**
+
 - `api`: Backend API changes
 - `web`: Frontend changes
 - `worker`: GPU worker changes
@@ -130,6 +136,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 - `ci`: CI/CD changes
 
 **Examples:**
+
 ```
 feat(api): add user authentication endpoint
 
@@ -151,22 +158,26 @@ Fixes #456
 ### Pull Request Process
 
 1. **Update your branch** with latest changes:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Push your changes**:
+
    ```bash
    git push origin feature/your-feature-name
    ```
 
 3. **Create a Pull Request** on GitHub:
+
    - Fill out the PR template
    - Link related issues
    - Request reviews from maintainers
 
 4. **Ensure all checks pass**:
+
    - CI workflows must pass
    - Security scans must pass
    - Code review approval required
@@ -187,16 +198,17 @@ Fixes #456
 - Use `mypy` for type checking
 
 **Example:**
+
 ```python
 from typing import Optional
 
 def process_data(data: list[str], limit: Optional[int] = None) -> dict[str, int]:
     """Process data and return statistics.
-    
+
     Args:
         data: List of data items to process
         limit: Optional limit on number of items
-        
+
     Returns:
         Dictionary with processing statistics
     """
@@ -212,6 +224,7 @@ def process_data(data: list[str], limit: Optional[int] = None) -> dict[str, int]
 - Use ESLint for linting
 
 **Example:**
+
 ```typescript
 interface User {
   id: string;
@@ -250,18 +263,22 @@ Follow [Keep a Changelog](https://keepachangelog.com/) format:
 ## [1.2.0] - 2024-01-15
 
 ### Added
+
 - New feature: User authentication endpoint
 - API documentation in `/docs` directory
 
 ### Changed
+
 - Updated dependency versions
 - Improved error messages
 
 ### Fixed
+
 - Memory leak in component cleanup
 - Authentication token expiration issue
 
 ### Removed
+
 - Deprecated API endpoint `/api/v1/old-endpoint`
 ```
 

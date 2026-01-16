@@ -99,7 +99,7 @@ const config: Config = {
         "slide-down": "slideDown 0.3s ease-out forwards",
         "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "scale-in": "scaleIn 0.2s ease-out forwards",
-        "bounce": "bounce 2s infinite",
+        bounce: "bounce 2s infinite",
       },
       keyframes: {
         fadeIn: {

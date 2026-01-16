@@ -1,5 +1,5 @@
 # MinIO Helm Values for Visage
-# 
+#
 # Deploy with:
 #   helm repo add bitnami https://charts.bitnami.com/bitnami
 #   helm upgrade --install visage-minio bitnami/minio \

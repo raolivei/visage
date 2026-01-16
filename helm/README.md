@@ -9,6 +9,7 @@ MinIO provides S3-compatible object storage for user photos and generated output
 ### Prerequisites
 
 1. Create MinIO credentials in Vault:
+
    ```bash
    vault kv put secret/visage/minio \
      access-key="visage-minio-user" \
@@ -43,6 +44,7 @@ kubectl get pods -n visage -l app.kubernetes.io/name=minio
 Local access: https://minio.eldertree.local
 
 Or via port-forward:
+
 ```bash
 kubectl port-forward -n visage svc/visage-minio 9001:9001
 # Open http://localhost:9001
@@ -53,6 +55,7 @@ kubectl port-forward -n visage svc/visage-minio 9001:9001
 Default: 20Gi
 
 For production, consider:
+
 - Photos: ~5MB each × 20 photos × N packs
 - Outputs: ~2MB each × 50 outputs × N packs
 - LoRA weights: ~100MB per pack
@@ -62,10 +65,12 @@ Estimate: 500MB per pack → 20Gi supports ~40 packs
 ### Backup
 
 MinIO data is stored on Longhorn, which provides:
+
 - Replication across nodes
 - Snapshot capability
 
 For additional backup:
+
 ```bash
 # Use mc (MinIO Client) to sync to external storage
 mc alias set visage https://minio.eldertree.local <access-key> <secret-key>

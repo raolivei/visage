@@ -50,15 +50,15 @@ Visage is designed to match commercial AI headshot tools (C$70–C$150) without 
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Frontend | Next.js 14 (App Router) |
-| Backend | FastAPI (Python) |
-| Database | PostgreSQL |
-| Job Queue | Redis |
-| Object Storage | MinIO (S3-compatible) |
-| AI Stack | SDXL + LoRA (PyTorch MPS) |
-| Orchestration | Kubernetes (k3s on ElderTree) |
+| Component      | Technology                    |
+| -------------- | ----------------------------- |
+| Frontend       | Next.js 14 (App Router)       |
+| Backend        | FastAPI (Python)              |
+| Database       | PostgreSQL                    |
+| Job Queue      | Redis                         |
+| Object Storage | MinIO (S3-compatible)         |
+| AI Stack       | SDXL + LoRA (PyTorch MPS)     |
+| Orchestration  | Kubernetes (k3s on ElderTree) |
 
 ## Project Structure
 
@@ -142,25 +142,25 @@ docker-compose logs -f
 
 ### API
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://visage:visage@localhost:5436/visage` |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6383` |
-| `MINIO_ENDPOINT` | MinIO endpoint | `localhost:9000` |
-| `MINIO_ACCESS_KEY` | MinIO access key | `minioadmin` |
-| `MINIO_SECRET_KEY` | MinIO secret key | `minioadmin` |
-| `MINIO_BUCKET` | S3 bucket name | `visage` |
+| Variable           | Description                  | Default                                            |
+| ------------------ | ---------------------------- | -------------------------------------------------- |
+| `DATABASE_URL`     | PostgreSQL connection string | `postgresql://visage:visage@localhost:5436/visage` |
+| `REDIS_URL`        | Redis connection string      | `redis://localhost:6383`                           |
+| `MINIO_ENDPOINT`   | MinIO endpoint               | `localhost:9000`                                   |
+| `MINIO_ACCESS_KEY` | MinIO access key             | `minioadmin`                                       |
+| `MINIO_SECRET_KEY` | MinIO secret key             | `minioadmin`                                       |
+| `MINIO_BUCKET`     | S3 bucket name               | `visage`                                           |
 
 ### Worker
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `API_URL` | Visage API endpoint | `http://localhost:8004` |
-| `REDIS_URL` | Redis connection string | `redis://localhost:6383` |
-| `MINIO_ENDPOINT` | MinIO endpoint | `localhost:9000` |
-| `MINIO_ACCESS_KEY` | MinIO access key | `minioadmin` |
-| `MINIO_SECRET_KEY` | MinIO secret key | `minioadmin` |
-| `DEVICE` | PyTorch device | `mps` (Apple Silicon) |
+| Variable           | Description             | Default                  |
+| ------------------ | ----------------------- | ------------------------ |
+| `API_URL`          | Visage API endpoint     | `http://localhost:8004`  |
+| `REDIS_URL`        | Redis connection string | `redis://localhost:6383` |
+| `MINIO_ENDPOINT`   | MinIO endpoint          | `localhost:9000`         |
+| `MINIO_ACCESS_KEY` | MinIO access key        | `minioadmin`             |
+| `MINIO_SECRET_KEY` | MinIO secret key        | `minioadmin`             |
+| `DEVICE`           | PyTorch device          | `mps` (Apple Silicon)    |
 
 ## Deployment
 
@@ -199,15 +199,15 @@ python -m src.main
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Health check |
-| `POST` | `/api/packs` | Create new headshot pack |
-| `GET` | `/api/packs/{id}` | Get pack details |
-| `POST` | `/api/packs/{id}/photos` | Upload photos to pack |
-| `POST` | `/api/packs/{id}/generate` | Start generation job |
-| `GET` | `/api/packs/{id}/outputs` | Get generated outputs |
-| `GET` | `/api/packs/{id}/download` | Download ZIP of outputs |
+| Method | Endpoint                   | Description              |
+| ------ | -------------------------- | ------------------------ |
+| `GET`  | `/health`                  | Health check             |
+| `POST` | `/api/packs`               | Create new headshot pack |
+| `GET`  | `/api/packs/{id}`          | Get pack details         |
+| `POST` | `/api/packs/{id}/photos`   | Upload photos to pack    |
+| `POST` | `/api/packs/{id}/generate` | Start generation job     |
+| `GET`  | `/api/packs/{id}/outputs`  | Get generated outputs    |
+| `GET`  | `/api/packs/{id}/download` | Download ZIP of outputs  |
 
 ## User Flow
 

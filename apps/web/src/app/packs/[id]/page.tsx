@@ -31,10 +31,13 @@ export default function PackDetailPage() {
   // Load pack data
   useEffect(() => {
     loadPackData();
-    
+
     // Poll for updates if processing
     const interval = setInterval(() => {
-      if (pack && ["training", "generating", "filtering"].includes(pack.status)) {
+      if (
+        pack &&
+        ["training", "generating", "filtering"].includes(pack.status)
+      ) {
         loadPackData();
       }
     }, 5000);
@@ -69,13 +72,18 @@ export default function PackDetailPage() {
       await api.startGeneration(packId);
       await loadPackData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start generation");
+      setError(
+        err instanceof Error ? err.message : "Failed to start generation"
+      );
     } finally {
       setIsStarting(false);
     }
   }
 
-  async function handleToggleSelect(outputId: string, currentSelected: boolean) {
+  async function handleToggleSelect(
+    outputId: string,
+    currentSelected: boolean
+  ) {
     try {
       await api.selectOutputs(packId, [outputId], !currentSelected);
       setOutputs((prev) =>
@@ -110,9 +118,17 @@ export default function PackDetailPage() {
     );
   }
 
-  const isProcessing = ["training", "generating", "filtering", "validating"].includes(pack.status);
-  const canStartGeneration = pack.status === "uploading" || pack.status === "created";
-  const currentJob = jobs.find((j) => j.status === "running" || j.status === "pending");
+  const isProcessing = [
+    "training",
+    "generating",
+    "filtering",
+    "validating",
+  ].includes(pack.status);
+  const canStartGeneration =
+    pack.status === "uploading" || pack.status === "created";
+  const currentJob = jobs.find(
+    (j) => j.status === "running" || j.status === "pending"
+  );
   const selectedCount = outputs.filter((o) => o.is_selected).length;
 
   return (
@@ -181,8 +197,8 @@ export default function PackDetailPage() {
                   {currentJob.job_type === "train"
                     ? "Training AI Model"
                     : currentJob.job_type === "generate"
-                    ? "Generating Headshots"
-                    : "Processing"}
+                      ? "Generating Headshots"
+                      : "Processing"}
                 </h3>
                 <p className="text-visage-400 text-sm">
                   {currentJob.current_step || "Please wait..."}
@@ -227,7 +243,7 @@ export default function PackDetailPage() {
               <ImageIcon className="w-5 h-5 text-accent-400" />
               Uploaded Photos ({photos.length})
             </h2>
-            
+
             {photos.length === 0 ? (
               <p className="text-visage-500 text-sm">No photos uploaded yet</p>
             ) : (
@@ -265,7 +281,9 @@ export default function PackDetailPage() {
           {/* Job History */}
           {jobs.length > 0 && (
             <div className="glass-card p-6 mt-6">
-              <h2 className="font-semibold text-visage-100 mb-4">Job History</h2>
+              <h2 className="font-semibold text-visage-100 mb-4">
+                Job History
+              </h2>
               <div className="space-y-3">
                 {jobs.map((job) => (
                   <div
@@ -336,7 +354,9 @@ export default function PackDetailPage() {
                 {outputs.map((output) => (
                   <button
                     key={output.id}
-                    onClick={() => handleToggleSelect(output.id, output.is_selected)}
+                    onClick={() =>
+                      handleToggleSelect(output.id, output.is_selected)
+                    }
                     className={cn(
                       "photo-card aspect-square",
                       output.is_selected && "ring-2 ring-accent-500"
@@ -345,7 +365,7 @@ export default function PackDetailPage() {
                     <div className="w-full h-full flex items-center justify-center text-visage-600">
                       <ImageIcon className="w-8 h-8" />
                     </div>
-                    
+
                     {/* Selection indicator */}
                     <div
                       className={cn(

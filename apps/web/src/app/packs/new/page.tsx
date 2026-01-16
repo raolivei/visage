@@ -3,24 +3,44 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
-import { 
-  Upload, 
-  X, 
-  AlertCircle, 
-  CheckCircle, 
-  Loader2, 
+import {
+  Upload,
+  X,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
   ArrowRight,
-  Image as ImageIcon 
+  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, StylePreset } from "@/lib/api";
 
 const STYLE_PRESETS: StylePreset[] = [
-  { id: "corporate", name: "Corporate / LinkedIn", description: "Professional business headshot" },
-  { id: "studio", name: "Studio Portrait", description: "Dramatic lighting, dark background" },
-  { id: "natural", name: "Natural Light", description: "Warm, approachable outdoor style" },
-  { id: "executive", name: "Executive", description: "Premium C-suite ready portrait" },
-  { id: "creative", name: "Creative Professional", description: "Modern artistic style" },
+  {
+    id: "corporate",
+    name: "Corporate / LinkedIn",
+    description: "Professional business headshot",
+  },
+  {
+    id: "studio",
+    name: "Studio Portrait",
+    description: "Dramatic lighting, dark background",
+  },
+  {
+    id: "natural",
+    name: "Natural Light",
+    description: "Warm, approachable outdoor style",
+  },
+  {
+    id: "executive",
+    name: "Executive",
+    description: "Premium C-suite ready portrait",
+  },
+  {
+    id: "creative",
+    name: "Creative Professional",
+    description: "Modern artistic style",
+  },
 ];
 
 interface UploadedFile {
@@ -145,8 +165,8 @@ export default function NewPackPage() {
                 step === s
                   ? "bg-accent-500 text-visage-950"
                   : ["upload", "style", "review"].indexOf(step) > i
-                  ? "bg-accent-500/20 text-accent-400"
-                  : "bg-visage-800 text-visage-500"
+                    ? "bg-accent-500/20 text-accent-400"
+                    : "bg-visage-800 text-visage-500"
               )}
             >
               {i + 1}
@@ -377,7 +397,10 @@ export default function NewPackPage() {
                 </h3>
                 <div className="grid grid-cols-4 gap-2">
                   {files.slice(0, 8).map((f, i) => (
-                    <div key={i} className="aspect-square rounded-lg overflow-hidden">
+                    <div
+                      key={i}
+                      className="aspect-square rounded-lg overflow-hidden"
+                    >
                       <img
                         src={f.preview}
                         alt={`Preview ${i + 1}`}
@@ -422,8 +445,8 @@ export default function NewPackPage() {
                 15-30 minutes for training and generation
               </p>
               <p className="text-visage-400 mt-1">
-                <strong className="text-visage-100">Expected outputs:</strong>{" "}
-                ~{selectedStyles.length * 20} images (best 5-10 per style)
+                <strong className="text-visage-100">Expected outputs:</strong> ~
+                {selectedStyles.length * 20} images (best 5-10 per style)
               </p>
             </div>
           </div>

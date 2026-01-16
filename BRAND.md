@@ -17,6 +17,7 @@ Color: Accent amber (#d4a574) on dark, or dark on light
 ```
 
 **Usage:**
+
 - Favicon
 - App icons
 - Standalone mark
@@ -27,6 +28,7 @@ Color: Accent amber (#d4a574) on dark, or dark on light
 The primary logo combines the icon with the serif wordmark.
 
 **Usage:**
+
 - Website header
 - Marketing materials
 - Documentation headers
@@ -43,6 +45,7 @@ Case: Title case
 ```
 
 **Usage:**
+
 - When icon is already present nearby
 - Text-only contexts
 - Print materials
@@ -59,6 +62,7 @@ Case: UPPERCASE
 ```
 
 **Usage:**
+
 - Admin dashboards
 - CLI headers
 - System status pages
@@ -69,33 +73,33 @@ Case: UPPERCASE
 
 ### Primary Palette
 
-| Name | Hex | Usage |
-|------|-----|-------|
-| Background | `#0a0a0b` | Primary background |
-| Background Secondary | `#111113` | Cards, inputs |
-| Background Tertiary | `#18181b` | Elevated surfaces |
-| Foreground | `#fafaf9` | Primary text |
-| Foreground Secondary | `#a8a8a3` | Body text |
-| Foreground Tertiary | `#71716b` | Muted text |
+| Name                 | Hex       | Usage              |
+| -------------------- | --------- | ------------------ |
+| Background           | `#0a0a0b` | Primary background |
+| Background Secondary | `#111113` | Cards, inputs      |
+| Background Tertiary  | `#18181b` | Elevated surfaces  |
+| Foreground           | `#fafaf9` | Primary text       |
+| Foreground Secondary | `#a8a8a3` | Body text          |
+| Foreground Tertiary  | `#71716b` | Muted text         |
 
 ### Accent
 
 Warm amber — used sparingly for emphasis and interactions.
 
-| Name | Hex | Usage |
-|------|-----|-------|
-| Accent | `#d4a574` | Buttons, links, highlights |
-| Accent Muted | `#b8956a` | Hover states |
-| Accent Subtle | `rgba(212, 165, 116, 0.15)` | Background tints |
+| Name          | Hex                         | Usage                      |
+| ------------- | --------------------------- | -------------------------- |
+| Accent        | `#d4a574`                   | Buttons, links, highlights |
+| Accent Muted  | `#b8956a`                   | Hover states               |
+| Accent Subtle | `rgba(212, 165, 116, 0.15)` | Background tints           |
 
 ### Semantic Colors
 
-| Name | Hex | Usage |
-|------|-----|-------|
+| Name    | Hex       | Usage               |
+| ------- | --------- | ------------------- |
 | Success | `#4ade80` | Completed, approved |
-| Warning | `#fbbf24` | Attention needed |
-| Error | `#f87171` | Failed, errors |
-| Info | `#60a5fa` | Informational |
+| Warning | `#fbbf24` | Attention needed    |
+| Error   | `#f87171` | Failed, errors      |
+| Info    | `#60a5fa` | Informational       |
 
 ---
 
@@ -104,22 +108,22 @@ Warm amber — used sparingly for emphasis and interactions.
 ### Font Stack
 
 ```css
---font-display: 'Libre Baskerville', Georgia, serif;
---font-body: 'DM Sans', Inter, system-ui, sans-serif;
---font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+--font-display: "Libre Baskerville", Georgia, serif;
+--font-body: "DM Sans", Inter, system-ui, sans-serif;
+--font-mono: "JetBrains Mono", "Fira Code", monospace;
 ```
 
 ### Hierarchy
 
-| Element | Font | Size | Weight |
-|---------|------|------|--------|
-| H1 | Display | 3rem (48px) | 400 |
-| H2 | Display | 2.25rem (36px) | 400 |
-| H3 | Display | 1.5rem (24px) | 400 |
-| Body | Sans | 1rem (16px) | 400 |
-| Small | Sans | 0.875rem (14px) | 400 |
-| Caption | Sans | 0.75rem (12px) | 500 |
-| Code | Mono | 0.875rem (14px) | 400 |
+| Element | Font    | Size            | Weight |
+| ------- | ------- | --------------- | ------ |
+| H1      | Display | 3rem (48px)     | 400    |
+| H2      | Display | 2.25rem (36px)  | 400    |
+| H3      | Display | 1.5rem (24px)   | 400    |
+| Body    | Sans    | 1rem (16px)     | 400    |
+| Small   | Sans    | 0.875rem (14px) | 400    |
+| Caption | Sans    | 0.75rem (12px)  | 500    |
+| Code    | Mono    | 0.875rem (14px) | 400    |
 
 ---
 
@@ -127,16 +131,16 @@ Warm amber — used sparingly for emphasis and interactions.
 
 Based on a 4px unit system:
 
-| Token | Value |
-|-------|-------|
-| `space-1` | 4px |
-| `space-2` | 8px |
-| `space-3` | 12px |
-| `space-4` | 16px |
-| `space-6` | 24px |
-| `space-8` | 32px |
-| `space-12` | 48px |
-| `space-16` | 64px |
+| Token      | Value |
+| ---------- | ----- |
+| `space-1`  | 4px   |
+| `space-2`  | 8px   |
+| `space-3`  | 12px  |
+| `space-4`  | 16px  |
+| `space-6`  | 24px  |
+| `space-8`  | 32px  |
+| `space-12` | 48px  |
+| `space-16` | 64px  |
 
 ---
 
@@ -145,6 +149,7 @@ Based on a 4px unit system:
 ### Buttons
 
 **Primary** — Warm accent, for main actions
+
 ```css
 background: #d4a574;
 color: #0a0a0b;
@@ -152,6 +157,7 @@ border-radius: 12px;
 ```
 
 **Secondary** — Subtle, for secondary actions
+
 ```css
 background: #1f1f23;
 border: 1px solid #27272a;
@@ -159,6 +165,7 @@ color: #fafaf9;
 ```
 
 **Ghost** — Minimal, for tertiary actions
+
 ```css
 background: transparent;
 color: #a8a8a3;
@@ -217,7 +224,9 @@ apps/web/src/lib/
 - Calm and reassuring
 
 **Example copy:**
+
 > "Professional headshots, generated by AI, trained on you."
 
 Not:
+
 > "Revolutionary AI-powered headshot technology!"

@@ -9,12 +9,14 @@ This directory contains CI/CD workflows for the Visage project.
 Builds and pushes the FastAPI backend Docker image.
 
 **Triggers:**
+
 - Push to `main` or `dev` branches (when `apps/api/**` changes)
 - Git tags matching `v*`
 - Pull requests to `main`
 - Manual dispatch
 
 **Features:**
+
 - Version extraction from `VERSION` file
 - ARM64-only build (for ElderTree cluster)
 - Trivy vulnerability scanning
@@ -25,12 +27,14 @@ Builds and pushes the FastAPI backend Docker image.
 Builds and pushes the Next.js frontend Docker image.
 
 **Triggers:**
+
 - Push to `main` or `dev` branches (when `apps/web/**` changes)
 - Git tags matching `v*`
 - Pull requests to `main`
 - Manual dispatch
 
 **Features:**
+
 - Version extraction from `VERSION` file
 - ARM64-only build (for ElderTree cluster)
 - Trivy vulnerability scanning
@@ -41,11 +45,13 @@ Builds and pushes the Next.js frontend Docker image.
 Runs linting, type checking, and tests.
 
 **Triggers:**
+
 - Pull requests to `main` or `dev`
 - Push to `dev`
 - Manual dispatch
 
 **Jobs:**
+
 - `lint`: Python (ruff, mypy) and TypeScript linting
 - `type-check`: Python and TypeScript type checking
 - `test`: Python (pytest) and Node.js tests
@@ -56,12 +62,14 @@ Runs linting, type checking, and tests.
 Comprehensive security scanning for vulnerabilities.
 
 **Triggers:**
+
 - Push to `main` or `dev`
 - Pull requests to `main`
 - Weekly schedule (Mondays at midnight)
 - Manual dispatch
 
 **Jobs:**
+
 - `codeql-analysis`: Static analysis for JavaScript and Python
 - `dependency-scan`: npm audit and pip-audit
 - `container-scan`: Trivy filesystem scan
@@ -80,6 +88,7 @@ Comprehensive security scanning for vulnerabilities.
 ## Authentication
 
 The workflows use the built-in `GITHUB_TOKEN` for pushing images to GHCR. This token:
+
 - Never expires
 - Is automatically provided by GitHub Actions
 - Has `packages:write` permission when workflow write access is enabled

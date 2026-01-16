@@ -7,7 +7,7 @@ on:
     branches: [main]
   schedule:
     # Run weekly security scans
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         # Languages used in this project
-        language: ['javascript', 'python']
+        language: ["javascript", "python"]
 
     steps:
       - name: Checkout repository
@@ -102,17 +102,17 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: "trivy-results.sarif"
 
   # Secret scanning (GitHub automatically does this, but we can add custom checks)
   secret-scan:
@@ -130,7 +130,7 @@ jobs:
           # Check for common secret patterns in git history
           # Note: GitHub automatically scans for secrets, this is a basic check
           SECRET_PATTERNS="password|secret|api[_-]?key|token|private[_-]?key|aws[_-]?access[_-]?key|aws[_-]?secret|bearer[_-]?token|authorization|credential|private[_-]?key|ssh[_-]?key"
-          
+
           if git log --all --full-history --source --pretty=format: -- . 2>/dev/null | grep -iE "$SECRET_PATTERNS" | head -1; then
             echo "::warning::Potential secrets found in git history"
             echo "⚠️  Warning: Potential secrets found in git history"
@@ -139,7 +139,7 @@ jobs:
           else
             echo "✅ No obvious secrets found in recent commits"
           fi
-          
+
           # Check current files for hardcoded secrets (common patterns)
           if find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" \) \
             -not -path "*/node_modules/*" \

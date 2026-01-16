@@ -9,18 +9,18 @@ export default function HomePage() {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Subtle gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background-secondary" />
-        
+
         {/* Decorative elements */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-accent/3 rounded-full blur-3xl" />
-        
+
         {/* Grid pattern overlay */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage: `linear-gradient(rgba(250,250,249,0.1) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(250,250,249,0.1) 1px, transparent 1px)`,
-            backgroundSize: '64px 64px',
+            backgroundSize: "64px 64px",
           }}
         />
 
@@ -31,7 +31,7 @@ export default function HomePage() {
               <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
               <span>Self-hosted AI Portrait Studio</span>
             </div>
-            
+
             {/* Main headline - typography focused */}
             <h1 className="animate-fade-in-up">
               <span className="block text-5xl md:text-7xl lg:text-8xl font-display text-foreground mb-4 tracking-tight">
@@ -44,24 +44,31 @@ export default function HomePage() {
                 trained on you.
               </span>
             </h1>
-            
+
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-foreground-secondary mt-10 mb-12 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-150">
-              Upload a few photos. Our AI learns your unique features and creates 
-              studio-quality portraits in minutes — all running on your own infrastructure.
+              Upload a few photos. Our AI learns your unique features and
+              creates studio-quality portraits in minutes — all running on your
+              own infrastructure.
             </p>
-            
+
             {/* CTA buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-200">
-              <a href="/packs/new" className="btn-primary text-lg px-8 py-4 group">
+              <a
+                href="/packs/new"
+                className="btn-primary text-lg px-8 py-4 group"
+              >
                 Create Your Headshots
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </a>
-              <a href="#how-it-works" className="btn-secondary text-lg px-8 py-4">
+              <a
+                href="#how-it-works"
+                className="btn-secondary text-lg px-8 py-4"
+              >
                 See How It Works
               </a>
             </div>
-            
+
             {/* Trust indicators */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-foreground-tertiary text-sm animate-fade-in delay-300">
               <span className="flex items-center gap-2">
@@ -79,7 +86,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-        
+
         {/* Scroll indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-foreground-tertiary rounded-full flex items-start justify-center p-1">
@@ -96,10 +103,11 @@ export default function HomePage() {
               Three steps to perfect headshots
             </h2>
             <p className="text-foreground-secondary text-lg max-w-xl mx-auto">
-              No photography experience required. Just upload and let AI do the work.
+              No photography experience required. Just upload and let AI do the
+              work.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
             {/* Step 1 */}
             <div className="relative group">
@@ -116,8 +124,9 @@ export default function HomePage() {
                   Upload your photos
                 </h3>
                 <p className="text-foreground-secondary leading-relaxed">
-                  Submit 10-20 photos of yourself. Different angles, expressions, 
-                  and lighting help the AI understand your unique features.
+                  Submit 10-20 photos of yourself. Different angles,
+                  expressions, and lighting help the AI understand your unique
+                  features.
                 </p>
               </div>
             </div>
@@ -137,8 +146,9 @@ export default function HomePage() {
                   AI training & generation
                 </h3>
                 <p className="text-foreground-secondary leading-relaxed">
-                  Our AI trains a personalized model on your features, then generates 
-                  dozens of professional variations across multiple styles.
+                  Our AI trains a personalized model on your features, then
+                  generates dozens of professional variations across multiple
+                  styles.
                 </p>
               </div>
             </div>
@@ -158,7 +168,7 @@ export default function HomePage() {
                   Download the best
                 </h3>
                 <p className="text-foreground-secondary leading-relaxed">
-                  We automatically filter for quality. Review the top results, 
+                  We automatically filter for quality. Review the top results,
                   pick your favorites, and download in high resolution.
                 </p>
               </div>
@@ -175,10 +185,11 @@ export default function HomePage() {
               15+ professional styles
             </h2>
             <p className="text-foreground-secondary text-lg max-w-xl mx-auto">
-              From corporate LinkedIn to creative editorial — find your perfect look.
+              From corporate LinkedIn to creative editorial — find your perfect
+              look.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               { name: "Corporate", category: "Business" },
@@ -192,7 +203,7 @@ export default function HomePage() {
               { name: "Speaker", category: "Personal Brand" },
               { name: "Minimalist", category: "Studio" },
             ].map((style, i) => (
-              <div 
+              <div
                 key={style.name}
                 className="glass-card p-5 hover:border-accent/30 hover:bg-background-elevated transition-all cursor-pointer group"
                 style={{ animationDelay: `${i * 50}ms` }}
@@ -205,13 +216,18 @@ export default function HomePage() {
                 <h4 className="font-medium text-foreground group-hover:text-accent transition-colors">
                   {style.name}
                 </h4>
-                <p className="text-sm text-foreground-tertiary">{style.category}</p>
+                <p className="text-sm text-foreground-tertiary">
+                  {style.category}
+                </p>
               </div>
             ))}
           </div>
-          
+
           <div className="text-center mt-10">
-            <a href="/packs/new" className="btn-ghost text-accent hover:text-accent-muted">
+            <a
+              href="/packs/new"
+              className="btn-ghost text-accent hover:text-accent-muted"
+            >
               View all styles
               <ArrowRight className="w-4 h-4 ml-1" />
             </a>
@@ -224,21 +240,24 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto text-center">
             <VisageIcon size={80} className="text-accent/30 mx-auto mb-8" />
-            
+
             <h2 className="text-4xl md:text-5xl font-display text-foreground mb-6">
               Ready to get started?
             </h2>
-            
+
             <p className="text-foreground-secondary text-lg mb-10 max-w-lg mx-auto">
-              Create your first headshot pack in minutes. Self-hosted means 
-              no subscriptions, no cloud costs, and complete privacy.
+              Create your first headshot pack in minutes. Self-hosted means no
+              subscriptions, no cloud costs, and complete privacy.
             </p>
-            
-            <a href="/packs/new" className="btn-primary text-lg px-10 py-4 group shadow-glow">
+
+            <a
+              href="/packs/new"
+              className="btn-primary text-lg px-10 py-4 group shadow-glow"
+            >
               Create Your Headshots
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </a>
-            
+
             <p className="text-foreground-tertiary text-sm mt-8">
               Running on ElderTree • Powered by SDXL
             </p>

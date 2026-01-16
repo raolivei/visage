@@ -6,6 +6,7 @@ Fine-tune SDXL with LoRA on user photos using PEFT.
 
 import logging
 import json
+import time
 from pathlib import Path
 from typing import Callable, Optional
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from ..config import get_settings, get_device, get_torch_dtype
+from ..metrics import update_training_progress
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -339,6 +341,8 @@ class LoRATrainer:
         self.unet.train()
         
         pbar = tqdm(total=num_steps, desc="Training LoRA")
+        step_start_time = time.time()
+        current_loss = 0.0
         
         while global_step < num_steps:
             for sample in dataset:
@@ -391,6 +395,7 @@ class LoRATrainer:
                 # Compute loss
                 loss = torch.nn.functional.mse_loss(model_pred, noise)
                 loss = loss / accumulation_steps
+                current_loss = loss.item() * accumulation_steps
                 
                 # Backward pass
                 loss.backward()
@@ -403,7 +408,21 @@ class LoRATrainer:
                     
                 global_step += 1
                 pbar.update(1)
-                pbar.set_postfix(loss=loss.item() * accumulation_steps)
+                pbar.set_postfix(loss=current_loss)
+                
+                # Calculate step time for metrics
+                step_time = time.time() - step_start_time
+                step_start_time = time.time()
+                
+                # Update Prometheus metrics every step
+                update_training_progress(
+                    step=global_step,
+                    total_steps=num_steps,
+                    loss=current_loss,
+                    lr=self.config.learning_rate,
+                    step_time=step_time,
+                    epoch=global_step // len(dataset) if dataset else 0
+                )
                 
                 # Progress callback
                 if progress_callback and global_step % 50 == 0:

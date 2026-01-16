@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, FolderOpen, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Plus,
+  FolderOpen,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, Pack } from "@/lib/api";
 
@@ -84,7 +91,7 @@ export default function PacksPage() {
             No packs yet
           </h2>
           <p className="text-visage-400 mb-8 max-w-md mx-auto">
-            Create your first headshot pack to get started. Upload your photos 
+            Create your first headshot pack to get started. Upload your photos
             and let our AI generate professional headshots.
           </p>
           <a href="/packs/new" className="btn-primary">
@@ -96,9 +103,17 @@ export default function PacksPage() {
         /* Pack grid */
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {packs.map((pack) => {
-            const status = statusConfig[pack.status as keyof typeof statusConfig] || statusConfig.created;
+            const status =
+              statusConfig[pack.status as keyof typeof statusConfig] ||
+              statusConfig.created;
             const StatusIcon = status.icon;
-            const isProcessing = ["uploading", "validating", "training", "generating", "filtering"].includes(pack.status);
+            const isProcessing = [
+              "uploading",
+              "validating",
+              "training",
+              "generating",
+              "filtering",
+            ].includes(pack.status);
 
             return (
               <a
@@ -133,9 +148,14 @@ export default function PacksPage() {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className={cn("badge", status.color)}>
-                    <StatusIcon className={cn("w-3.5 h-3.5 mr-1", isProcessing && "animate-spin")} />
+                    <StatusIcon
+                      className={cn(
+                        "w-3.5 h-3.5 mr-1",
+                        isProcessing && "animate-spin"
+                      )}
+                    />
                     {status.label}
                   </div>
                 </div>

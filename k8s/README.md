@@ -146,6 +146,7 @@ The worker pushes metrics to the central Prometheus Pushgateway:
 - **Dashboards**: Visage Operations, Visage Training
 
 Metrics include:
+
 - Training progress, loss, step duration, ETA
 - Job status and duration
 - Image generation and quality scores
@@ -153,13 +154,13 @@ Metrics include:
 
 ### Environment Options
 
-| Variable | Local Dev | Production |
-| -------- | --------- | ---------- |
-| `API_URL` | `http://localhost:8004` | `https://visage.eldertree.local` |
-| `REDIS_URL` | `redis://localhost:6383` | `redis://localhost:6379` (port-forward) |
-| `MINIO_ENDPOINT` | `localhost:9000` | `minio.eldertree.local` |
-| `MINIO_SECURE` | `false` | `true` |
-| `PUSHGATEWAY_URL` | (empty) | `https://pushgateway.eldertree.local` |
+| Variable          | Local Dev                | Production                              |
+| ----------------- | ------------------------ | --------------------------------------- |
+| `API_URL`         | `http://localhost:8004`  | `https://visage.eldertree.local`        |
+| `REDIS_URL`       | `redis://localhost:6383` | `redis://localhost:6379` (port-forward) |
+| `MINIO_ENDPOINT`  | `localhost:9000`         | `minio.eldertree.local`                 |
+| `MINIO_SECURE`    | `false`                  | `true`                                  |
+| `PUSHGATEWAY_URL` | (empty)                  | `https://pushgateway.eldertree.local`   |
 
 ## Troubleshooting
 

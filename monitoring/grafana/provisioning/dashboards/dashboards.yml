@@ -1,0 +1,12 @@
+# Grafana dashboard provisioning
+apiVersion: 1
+
+providers:
+  - name: 'Visage Dashboards'
+    orgId: 1
+    folder: 'Visage'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

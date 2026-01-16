@@ -1,0 +1,31 @@
+# Prometheus configuration for Visage
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Worker metrics (running locally on Mac)
+  - job_name: 'visage-worker'
+    static_configs:
+      - targets: ['host.docker.internal:9090']
+    scrape_interval: 5s
+
+  # API metrics (if implemented)
+  - job_name: 'visage-api'
+    static_configs:
+      - targets: ['api:8000']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # Redis metrics via redis-exporter (optional)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+
+  # MinIO metrics
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: /minio/v2/metrics/cluster
+    scrape_interval: 60s
