@@ -192,7 +192,7 @@ async def delete_pack(
     # Delete from database (cascades to photos, jobs, outputs)
     await db.delete(pack)
     
-    logger.info("Deleted pack %s", pack_id)
+    logger.info("Deleted pack %s", str(pack_id))
 
 
 # ============================================================================
@@ -394,7 +394,7 @@ async def start_generation(
     # Update pack status
     pack.status = PackStatus.TRAINING
     
-    logger.info("Started generation for pack %s, job %s", pack_id, job.id)
+    logger.info("Started generation for pack %s, job %s", str(pack_id), str(job.id))
     
     job_response = JobResponse(
         id=job.id,

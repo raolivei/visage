@@ -5,8 +5,6 @@ Similar to btop but focused on GPU and training progress
 """
 import time
 import subprocess
-import sys
-import os
 from datetime import datetime
 
 # ANSI escape codes
@@ -34,7 +32,7 @@ def get_worker_status():
             pid = result.stdout.strip().split('\n')[0]
             return True, pid
         return False, None
-    except:
+    except (subprocess.SubprocessError, OSError, ValueError):
         return False, None
 
 def get_job_progress():
@@ -61,7 +59,7 @@ def get_job_progress():
                 'status': data.get('status', 'unknown'),
                 'job_type': data.get('job_type', 'unknown')
             }
-    except:
+    except (subprocess.SubprocessError, subprocess.TimeoutExpired, OSError, ValueError, IndexError):
         pass
     return {'progress': '0', 'step': 'Waiting...', 'status': 'unknown', 'job_type': 'unknown'}
 
@@ -71,7 +69,7 @@ def format_progress_bar(pct, width=40):
         pct_int = int(float(pct))
         filled = int(width * pct_int / 100)
         return "█" * filled + "░" * (width - filled)
-    except:
+    except (ValueError, TypeError):
         return "░" * width
 
 def get_status_color(status):
@@ -134,7 +132,7 @@ def main():
             # Progress
             try:
                 pct = int(float(job['progress']))
-            except:
+            except (ValueError, TypeError, KeyError):
                 pct = 0
             bar = format_progress_bar(pct)
             print_line(f"  {BOLD}Progress:{RESET}   [{CYAN}{bar}{RESET}] {pct:3d}%")

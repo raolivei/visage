@@ -1,5 +1,4 @@
 import { ArrowRight, Upload, Wand2, Download, Check } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { VisageIcon } from "@/components/VisageIcon";
 
 export default function HomePage() {

@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     lora_batch_size: int = 1
     
     # Generation defaults
-    num_inference_steps: int = 30
+    num_inference_steps: int = 40  # Increased for better quality (30 was default)
     guidance_scale: float = 7.5
     image_width: int = 1024
     image_height: int = 1024
