@@ -1,0 +1,164 @@
+---
+# CloudNativePG Cluster for Visage
+# High Availability PostgreSQL with streaming replication
+#
+# Prerequisites:
+# - CloudNativePG operator installed in cluster
+# - kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.22/releases/cnpg-1.22.0.yaml
+#
+# Features:
+# - 3-node cluster (1 primary + 2 replicas)
+# - Automatic failover
+# - Streaming replication
+# - Point-in-time recovery via WAL archiving to MinIO
+# - Scheduled backups
+
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: visage-postgres-cluster
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: visage
+spec:
+  instances: 3
+  
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: "256MB"
+      effective_cache_size: "512MB"
+      maintenance_work_mem: "64MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      work_mem: "4MB"
+      min_wal_size: "1GB"
+      max_wal_size: "4GB"
+      max_worker_processes: "4"
+      max_parallel_workers_per_gather: "2"
+      max_parallel_workers: "4"
+      max_parallel_maintenance_workers: "2"
+  
+  # Bootstrap from existing database or create fresh
+  bootstrap:
+    initdb:
+      database: visage
+      owner: visage
+      secret:
+        name: visage-postgres-secret
+  
+  # Storage configuration with Longhorn HA
+  storage:
+    storageClass: longhorn
+    size: 10Gi
+    pvcTemplate:
+      metadata:
+        annotations:
+          longhorn.io/numberOfReplicas: "3"
+          longhorn.io/staleReplicaTimeout: "2880"
+          longhorn.io/dataLocality: "best-effort"
+  
+  # WAL storage for point-in-time recovery
+  walStorage:
+    storageClass: longhorn
+    size: 5Gi
+    pvcTemplate:
+      metadata:
+        annotations:
+          longhorn.io/numberOfReplicas: "3"
+  
+  # Backup configuration to MinIO
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://visage-backups/postgres/
+      endpointURL: http://visage-minio:9000
+      s3Credentials:
+        accessKeyId:
+          name: visage-minio-secret
+          key: access-key
+        secretAccessKey:
+          name: visage-minio-secret
+          key: secret-key
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+    retentionPolicy: "30d"
+  
+  # Pod anti-affinity for HA
+  affinity:
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
+  
+  # Resources
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  
+  # Monitoring
+  monitoring:
+    enablePodMonitor: true
+
+---
+# Scheduled backup
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: visage-postgres-backup
+  namespace: visage
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  backupOwnerReference: self
+  cluster:
+    name: visage-postgres-cluster
+  immediate: false
+
+---
+# Service for primary (read-write)
+apiVersion: v1
+kind: Service
+metadata:
+  name: visage-postgres
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: visage
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    cnpg.io/cluster: visage-postgres-cluster
+    role: primary
+
+---
+# Service for replicas (read-only)
+apiVersion: v1
+kind: Service
+metadata:
+  name: visage-postgres-ro
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: visage
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    cnpg.io/cluster: visage-postgres-cluster
+    role: replica

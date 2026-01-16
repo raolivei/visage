@@ -8,10 +8,16 @@ metadata:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
     app.kubernetes.io/part-of: visage
+  annotations:
+    # Longhorn HA settings - 3 replicas across nodes
+    longhorn.io/numberOfReplicas: "3"
+    longhorn.io/staleReplicaTimeout: "2880"
+    longhorn.io/dataLocality: "best-effort"
+    longhorn.io/replicaAutoBalance: "best-effort"
 spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: longhorn
   resources:
     requests:
-      storage: 5Gi
+      storage: 10Gi

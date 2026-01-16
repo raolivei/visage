@@ -1,0 +1,125 @@
+# Redis HA with Sentinel
+# Bitnami Redis Helm Chart Values
+#
+# Install with:
+# helm repo add bitnami https://charts.bitnami.com/bitnami
+# helm install visage-redis bitnami/redis -n visage -f helm/redis-values.yaml
+#
+# Architecture: Master + 2 Replicas + 3 Sentinels
+
+architecture: replication
+
+# Authentication
+auth:
+  enabled: true
+  sentinel: true
+  existingSecret: visage-redis-secret
+  existingSecretPasswordKey: password
+
+# Sentinel configuration for HA
+sentinel:
+  enabled: true
+  masterSet: visage-master
+  quorum: 2
+  
+  # 3 sentinels for quorum
+  replicas: 3
+  
+  # Resources for sentinel
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 100m
+  
+  # Spread sentinels across nodes
+  podAntiAffinityPreset: hard
+  
+  # Service configuration
+  service:
+    type: ClusterIP
+    ports:
+      sentinel: 26379
+      redis: 6379
+
+# Master configuration
+master:
+  count: 1
+  
+  # Persistence with Longhorn
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: 5Gi
+    annotations:
+      longhorn.io/numberOfReplicas: "3"
+  
+  # Resources
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 500m
+  
+  # Spread across nodes
+  podAntiAffinityPreset: hard
+
+# Replica configuration
+replica:
+  replicaCount: 2
+  
+  # Persistence with Longhorn
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: 5Gi
+    annotations:
+      longhorn.io/numberOfReplicas: "3"
+  
+  # Resources
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 500m
+  
+  # Spread across nodes
+  podAntiAffinityPreset: hard
+
+# Common settings
+commonConfiguration: |
+  appendonly yes
+  appendfsync everysec
+  maxmemory 200mb
+  maxmemory-policy allkeys-lru
+
+# Metrics for Prometheus
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    namespace: visage
+    labels:
+      release: prometheus
+  
+  resources:
+    requests:
+      memory: 32Mi
+      cpu: 10m
+    limits:
+      memory: 64Mi
+      cpu: 100m
+
+# Network policy
+networkPolicy:
+  enabled: false  # Can enable for extra security
+
+# Labels
+commonLabels:
+  app.kubernetes.io/part-of: visage
