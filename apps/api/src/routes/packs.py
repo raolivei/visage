@@ -24,6 +24,8 @@ from src.schemas import (
     JobCreateResponse,
     JobResponse,
     OutputListResponse,
+    OutputRatingRequest,
+    OutputRatingResponse,
     OutputResponse,
     OutputSelectRequest,
     PackCreate,
@@ -477,17 +479,24 @@ async def list_outputs(
             style_preset=o.style_preset,
             score=o.score,
             is_selected=o.is_selected,
+            user_rating=o.user_rating,
+            rating_reason=o.rating_reason,
+            rated_at=o.rated_at,
             created_at=o.created_at,
         )
         for o in outputs
     ]
     
     selected_count = sum(1 for o in outputs if o.is_selected)
+    liked_count = sum(1 for o in outputs if o.user_rating is True)
+    disliked_count = sum(1 for o in outputs if o.user_rating is False)
     
     return OutputListResponse(
         outputs=output_responses,
         total=len(output_responses),
         selected_count=selected_count,
+        liked_count=liked_count,
+        disliked_count=disliked_count,
     )
 
 
@@ -510,6 +519,57 @@ async def select_outputs(
         output.is_selected = data.selected
     
     return {"updated": len(outputs)}
+
+
+@router.post("/{pack_id}/outputs/{output_id}/rate", response_model=OutputRatingResponse)
+async def rate_output(
+    pack_id: uuid.UUID,
+    output_id: uuid.UUID,
+    data: OutputRatingRequest,
+    db: AsyncSession = Depends(get_db),
+) -> OutputRatingResponse:
+    """
+    Rate an output image (thumbs up or thumbs down).
+    
+    This feedback helps improve future generations by:
+    - Learning which styles work best
+    - Improving quality filtering
+    - Understanding user preferences
+    """
+    from datetime import datetime
+    
+    result = await db.execute(
+        select(Output).where(
+            Output.pack_id == pack_id,
+            Output.id == output_id,
+        )
+    )
+    output = result.scalar_one_or_none()
+    
+    if not output:
+        raise HTTPException(status_code=404, detail="Output not found")
+    
+    # Update rating
+    output.user_rating = data.rating
+    output.rating_reason = data.reason
+    output.rated_at = datetime.utcnow()
+    
+    await db.flush()
+    
+    logger.info(
+        "Output %s rated: %s%s",
+        output_id,
+        "👍" if data.rating else "👎",
+        f" - {data.reason}" if data.reason else "",
+    )
+    
+    return OutputRatingResponse(
+        id=output.id,
+        user_rating=output.user_rating,
+        rating_reason=output.rating_reason,
+        rated_at=output.rated_at,
+        message="Thanks for your feedback!" if data.rating else "Thanks for the feedback - we'll try to improve!",
+    )
 
 
 @router.get("/{pack_id}/outputs/{output_id}/url")
