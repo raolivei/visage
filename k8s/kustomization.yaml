@@ -1,4 +1,18 @@
 ---
+# Visage Kubernetes Deployment
+#
+# Standard deployment (current):
+#   kubectl apply -k k8s/
+#
+# HA deployment (CloudNativePG + Redis Sentinel):
+#   1. Install CloudNativePG operator:
+#      kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.22/releases/cnpg-1.22.0.yaml
+#   2. Install Redis Sentinel:
+#      helm install visage-redis bitnami/redis -n visage -f helm/redis-values.yaml
+#   3. Apply HA resources:
+#      kubectl apply -f k8s/postgres-cluster.yaml
+#      kubectl apply -f k8s/redis-secret.yaml
+
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -9,8 +23,8 @@ resources:
   # - externalsecrets.yaml  # Disabled - using K8s secrets directly
   - minio-deployment.yaml
   - postgres-pvc.yaml
-  - postgres-deployment.yaml
-  - redis-deployment.yaml
+  - postgres-deployment.yaml      # Standalone - replace with postgres-cluster.yaml for HA
+  - redis-deployment.yaml         # Standalone - replace with Redis Helm chart for HA
   - api-deployment.yaml
   - frontend-deployment.yaml
   - ingress.yaml

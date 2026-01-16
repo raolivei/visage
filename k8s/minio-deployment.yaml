@@ -1,17 +1,27 @@
 ---
-# MinIO PVC
+# MinIO PVC with Longhorn HA
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: visage-minio-pvc
   namespace: visage
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: visage
+  annotations:
+    # Longhorn HA settings - 3 replicas across nodes
+    longhorn.io/numberOfReplicas: "3"
+    longhorn.io/staleReplicaTimeout: "2880"
+    longhorn.io/dataLocality: "best-effort"
+    longhorn.io/replicaAutoBalance: "best-effort"
 spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: longhorn
   resources:
     requests:
-      storage: 20Gi
+      storage: 50Gi
 
 ---
 # MinIO Deployment (official image with ARM64 support)

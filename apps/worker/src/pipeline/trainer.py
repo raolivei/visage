@@ -2,14 +2,16 @@
 LoRA Trainer
 
 Fine-tune SDXL with LoRA on user photos using PEFT.
+Supports checkpointing for crash recovery and resume.
 """
 
 import logging
 import json
 import time
+import os
 from pathlib import Path
 from typing import Callable, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import torch
 from PIL import Image
@@ -20,6 +22,9 @@ from ..metrics import update_training_progress
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+# Checkpoint interval (every N steps)
+CHECKPOINT_INTERVAL = 100
 
 
 @dataclass
@@ -49,6 +54,10 @@ class TrainingConfig:
     # Regularization
     prior_loss_weight: float = 1.0
     
+    # Checkpointing
+    checkpoint_interval: int = CHECKPOINT_INTERVAL  # Save every N steps
+    resume_from_checkpoint: bool = True  # Auto-resume if checkpoint exists
+    
     def __post_init__(self):
         if self.target_modules is None:
             # Default SDXL LoRA targets
@@ -58,6 +67,49 @@ class TrainingConfig:
                 "to_v",
                 "to_out.0",
             ]
+
+
+@dataclass
+class TrainingCheckpoint:
+    """Training checkpoint for crash recovery."""
+    step: int
+    loss: float
+    optimizer_state: dict
+    lora_state: dict
+    trigger_token: str
+    config: dict
+    
+    @classmethod
+    def load(cls, checkpoint_path: Path) -> Optional["TrainingCheckpoint"]:
+        """Load checkpoint from disk."""
+        if not checkpoint_path.exists():
+            return None
+        try:
+            data = torch.load(checkpoint_path, map_location="cpu")
+            return cls(
+                step=data["step"],
+                loss=data["loss"],
+                optimizer_state=data["optimizer_state"],
+                lora_state=data["lora_state"],
+                trigger_token=data["trigger_token"],
+                config=data["config"],
+            )
+        except Exception as e:
+            logger.warning(f"Failed to load checkpoint: {e}")
+            return None
+    
+    def save(self, checkpoint_path: Path):
+        """Save checkpoint to disk."""
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save({
+            "step": self.step,
+            "loss": self.loss,
+            "optimizer_state": self.optimizer_state,
+            "lora_state": self.lora_state,
+            "trigger_token": self.trigger_token,
+            "config": self.config,
+        }, checkpoint_path)
+        logger.info(f"Checkpoint saved at step {self.step}")
 
 
 class LoRATrainer:
@@ -279,15 +331,17 @@ class LoRATrainer:
         output_dir: Path,
         trigger_token: str = "@visageUser",
         progress_callback: Callable[[int, str], None] | None = None,
+        checkpoint_dir: Optional[Path] = None,
     ) -> Path:
         """
-        Train LoRA on user photos.
+        Train LoRA on user photos with checkpoint support.
         
         Args:
             photo_paths: List of paths to training images
             output_dir: Directory to save trained LoRA
             trigger_token: Trigger token for the LoRA
             progress_callback: Optional callback for progress updates
+            checkpoint_dir: Directory for checkpoints (defaults to output_dir/checkpoints)
             
         Returns:
             Path to trained LoRA weights
@@ -296,6 +350,10 @@ class LoRATrainer:
         output_dir.mkdir(parents=True, exist_ok=True)
         lora_path = output_dir / "lora_weights.safetensors"
         config_path = output_dir / "training_config.json"
+        
+        # Setup checkpoint directory
+        checkpoint_dir = checkpoint_dir or (output_dir / "checkpoints")
+        checkpoint_path = checkpoint_dir / "latest_checkpoint.pt"
         
         if progress_callback:
             progress_callback(2, "Loading models...")
@@ -329,12 +387,28 @@ class LoRATrainer:
         # Enable gradient checkpointing to save memory
         if self.config.gradient_checkpointing:
             self.unet.enable_gradient_checkpointing()
+        
+        # Check for existing checkpoint
+        start_step = 0
+        checkpoint = None
+        if self.config.resume_from_checkpoint:
+            checkpoint = TrainingCheckpoint.load(checkpoint_path)
+            if checkpoint and checkpoint.trigger_token == trigger_token:
+                start_step = checkpoint.step
+                optimizer.load_state_dict(checkpoint.optimizer_state)
+                # Load LoRA state
+                self.unet.load_state_dict(checkpoint.lora_state, strict=False)
+                logger.info(f"Resuming training from checkpoint at step {start_step}")
+                if progress_callback:
+                    progress_callback(15, f"Resuming from step {start_step}...")
+            elif checkpoint:
+                logger.info("Checkpoint found but for different trigger token, starting fresh")
             
-        if progress_callback:
+        if progress_callback and start_step == 0:
             progress_callback(15, "Starting training...")
             
         # Training loop
-        global_step = 0
+        global_step = start_step
         num_steps = self.config.max_train_steps
         accumulation_steps = self.config.gradient_accumulation_steps
         
@@ -428,6 +502,31 @@ class LoRATrainer:
                 if progress_callback and global_step % 50 == 0:
                     progress = 15 + int((global_step / num_steps) * 75)
                     progress_callback(progress, f"Training step {global_step}/{num_steps}")
+                
+                # Save checkpoint periodically
+                if global_step > 0 and global_step % self.config.checkpoint_interval == 0:
+                    try:
+                        checkpoint = TrainingCheckpoint(
+                            step=global_step,
+                            loss=current_loss,
+                            optimizer_state=optimizer.state_dict(),
+                            lora_state=self.unet.state_dict(),
+                            trigger_token=trigger_token,
+                            config={
+                                "resolution": self.config.resolution,
+                                "lora_rank": self.config.lora_rank,
+                                "lora_alpha": self.config.lora_alpha,
+                                "learning_rate": self.config.learning_rate,
+                            }
+                        )
+                        checkpoint.save(checkpoint_path)
+                        if progress_callback:
+                            progress_callback(
+                                15 + int((global_step / num_steps) * 75),
+                                f"Checkpoint saved at step {global_step}"
+                            )
+                    except Exception as e:
+                        logger.warning(f"Failed to save checkpoint: {e}")
                     
         pbar.close()
         
@@ -459,6 +558,14 @@ class LoRATrainer:
             
         if progress_callback:
             progress_callback(100, "Training complete!")
+        
+        # Clean up checkpoint after successful completion
+        try:
+            if checkpoint_path.exists():
+                checkpoint_path.unlink()
+                logger.info("Checkpoint cleaned up after successful training")
+        except Exception as e:
+            logger.warning(f"Failed to clean up checkpoint: {e}")
             
         logger.info(f"LoRA training complete. Weights saved to {output_dir}")
         return lora_path
