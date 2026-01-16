@@ -12,7 +12,6 @@ resources:
   - postgres-deployment.yaml
   - redis-deployment.yaml
   - api-deployment.yaml
-  - api-servicemonitor.yaml
   - frontend-deployment.yaml
   - ingress.yaml
 
