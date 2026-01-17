@@ -567,13 +567,39 @@ class LoRATrainer:
         if progress_callback:
             progress_callback(92, "Saving LoRA weights...")
             
-        # Save LoRA weights
-        logger.info(f"Saving LoRA weights to {lora_path}")
-        self.unet.save_pretrained(output_dir)
-        
-        # Also save in safetensors format for compatibility
-        from peft import PeftModel
+        # Save LoRA weights using PEFT's save_pretrained
+        # This creates adapter_model.safetensors in output_dir
+        logger.info(f"Saving LoRA weights to {output_dir}")
         self.unet.save_pretrained(output_dir, safe_serialization=True)
+        
+        # PEFT saves as adapter_model.safetensors, but we want a consistent filename
+        # Rename/copy to our expected filename for downstream compatibility
+        peft_weights_path = output_dir / "adapter_model.safetensors"
+        
+        if peft_weights_path.exists():
+            # Copy to our expected filename (keep original for PEFT compatibility)
+            import shutil
+            shutil.copy2(peft_weights_path, lora_path)
+            logger.info(f"LoRA weights saved to {lora_path}")
+        else:
+            # Fallback: look for any .safetensors file
+            safetensor_files = list(output_dir.glob("*.safetensors"))
+            if safetensor_files:
+                import shutil
+                shutil.copy2(safetensor_files[0], lora_path)
+                logger.info(f"LoRA weights saved to {lora_path} (from {safetensor_files[0].name})")
+            else:
+                raise FileNotFoundError(
+                    f"No safetensors files found in {output_dir}. "
+                    f"PEFT save_pretrained may have failed. "
+                    f"Contents: {list(output_dir.iterdir())}"
+                )
+        
+        # Verify the file exists before proceeding
+        if not lora_path.exists():
+            raise FileNotFoundError(f"LoRA weights file not found at {lora_path} after save")
+        
+        logger.info(f"Verified LoRA weights exist at {lora_path} ({lora_path.stat().st_size} bytes)")
         
         # Save training config
         config_dict = {
@@ -591,9 +617,16 @@ class LoRATrainer:
             json.dump(config_dict, f, indent=2)
             
         if progress_callback:
+            progress_callback(95, "Verifying weights...")
+        
+        # Final verification before returning
+        if not lora_path.exists():
+            raise FileNotFoundError(f"LoRA weights disappeared at {lora_path}")
+            
+        if progress_callback:
             progress_callback(100, "Training complete!")
         
-        # Clean up checkpoint after successful completion
+        # Clean up checkpoint ONLY after everything is successfully saved
         try:
             if checkpoint_path.exists():
                 checkpoint_path.unlink()

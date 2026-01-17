@@ -115,10 +115,23 @@ def process_train_job(job: dict, queue, storage) -> dict:
                 progress_callback=lambda p, s: progress(10 + int(p * 0.7), s),
             )
             
-            # Upload LoRA weights
+            # Verify LoRA weights exist before upload
+            if not lora_path.exists():
+                raise FileNotFoundError(
+                    f"LoRA weights not found at {lora_path} after training. "
+                    f"Directory contents: {list(lora_dir.iterdir()) if lora_dir.exists() else 'dir not found'}"
+                )
+            
+            logger.info(f"LoRA training complete. Weights at {lora_path} ({lora_path.stat().st_size} bytes)")
+            
+            # Upload LoRA weights IMMEDIATELY after training
+            # Do this before any cleanup to prevent race conditions
             progress(85, "Uploading LoRA weights")
             lora_s3_key = f"packs/{pack_id}/lora/lora_weights.safetensors"
             storage.upload_file(lora_path, lora_s3_key)
+            
+            # Verify upload succeeded
+            logger.info(f"LoRA weights uploaded to {lora_s3_key}")
             
             # Cleanup
             trainer.cleanup()
