@@ -149,14 +149,47 @@ def process_train_job(job: dict, queue, storage) -> dict:
             raise
 
 
+def register_outputs_in_database(api_url: str, pack_id: str, job_id: str, outputs: list[dict]) -> bool:
+    """
+    Register outputs in the database via API call.
+    
+    This enables incremental saving - outputs are registered as each style
+    completes rather than waiting for all generation to finish.
+    """
+    import httpx
+    
+    if not outputs:
+        return True
+    
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(
+                f"{api_url}/api/packs/{pack_id}/outputs/batch",
+                json={
+                    "job_id": job_id,
+                    "outputs": outputs,
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
+            logger.info(f"Registered {result['created_count']} outputs in database")
+            return True
+    except Exception as e:
+        logger.error(f"Failed to register outputs in database: {e}")
+        return False
+
+
 def process_generate_job(job: dict, queue, storage) -> dict:
     """
-    Process a generation job.
+    Process a generation job with INCREMENTAL SAVING.
     
-    1. Load LoRA
-    2. Generate images for each style
-    3. Filter results
-    4. Upload outputs
+    For each style:
+    1. Generate images for that style
+    2. Filter results
+    3. Upload to MinIO
+    4. Register in database via API
+    
+    This ensures partial results are saved even if the job fails mid-way.
     """
     job_id = job["id"]
     pack_id = job["pack_id"]
@@ -191,7 +224,7 @@ def process_generate_job(job: dict, queue, storage) -> dict:
                 generator.load_lora(lora_path)
             
             # Get prompts for each style
-            progress(15, "Preparing prompts")
+            progress(12, "Preparing prompts")
             
             # Import shared prompts
             sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "packages"))
@@ -209,25 +242,8 @@ def process_generate_job(job: dict, queue, storage) -> dict:
                 except ValueError:
                     logger.warning(f"Unknown style: {style}")
             
-            # Generate images
-            progress(20, f"Generating {len(prompts) * num_per_style} images")
-            
-            def gen_progress(p: int, s: str):
-                # Map generation progress to 20-70%
-                progress(20 + int(p * 0.5), s)
-            
-            generated = generator.generate_batch(
-                prompts=prompts,
-                num_per_style=num_per_style,
-                progress_callback=gen_progress,
-            )
-            
-            logger.info(f"Generated {len(generated)} images")
-            
-            # Filter images
-            progress(70, "Filtering images")
-            
-            # Load reference photos for face comparison
+            # Load reference photos for face comparison (do once, reuse for all styles)
+            progress(14, "Loading reference photos")
             photo_keys = storage.list_files(f"packs/{pack_id}/photos/")
             ref_paths = []
             for key in photo_keys[:5]:  # Use first 5 photos as reference
@@ -238,39 +254,83 @@ def process_generate_job(job: dict, queue, storage) -> dict:
             quality_filter = QualityFilter()
             quality_filter.set_reference_images(ref_paths)
             
-            filtered = quality_filter.filter_batch(generated)
+            # Process each style INCREMENTALLY
+            total_generated = 0
+            total_filtered = 0
+            all_uploaded = []
             
-            logger.info(f"Filtered to {len(filtered)} images")
+            # Progress allocation: 15-95% for generation (80% total, split by styles)
+            style_progress_share = 80 / len(prompts) if prompts else 80
             
-            # Upload results
-            progress(85, f"Uploading {len(filtered)} outputs")
-            
-            uploaded = []
-            for i, item in enumerate(filtered):
-                img = item["image"]
-                style = item["style_id"]
-                seed = item["seed"]
+            for style_idx, (style_id, prompt, negative_prompt) in enumerate(prompts):
+                style_start_progress = 15 + int(style_idx * style_progress_share)
+                style_end_progress = 15 + int((style_idx + 1) * style_progress_share)
                 
-                # Save to buffer
-                buf = io.BytesIO()
-                img.save(buf, format="PNG", quality=95)
-                buf.seek(0)
+                progress(style_start_progress, f"Generating {style_id} (style {style_idx + 1}/{len(prompts)})")
                 
-                # Upload
-                output_key = f"packs/{pack_id}/outputs/{style}_{seed}.png"
-                storage.upload_bytes(buf.read(), output_key)
+                # Generate images for this style
+                def style_gen_progress(p: int, s: str):
+                    # Map 0-100 to style's progress range (first 70% of style's share)
+                    gen_range = (style_end_progress - style_start_progress) * 0.7
+                    pct = style_start_progress + int((p / 100) * gen_range)
+                    progress(pct, f"{style_id}: {s}")
                 
-                uploaded.append({
-                    "s3_key": output_key,
-                    "style_preset": style,
-                    "seed": seed,
-                    "prompt": item["prompt"],
-                    "score": item["overall_score"],
-                    "face_similarity": item["face_similarity"],
-                })
+                style_images = generator.generate_batch(
+                    prompts=[(style_id, prompt, negative_prompt)],
+                    num_per_style=num_per_style,
+                    progress_callback=style_gen_progress,
+                )
                 
-                if (i + 1) % 10 == 0:
-                    progress(85 + int((i / len(filtered)) * 10), f"Uploaded {i + 1}/{len(filtered)}")
+                logger.info(f"Generated {len(style_images)} images for {style_id}")
+                total_generated += len(style_images)
+                
+                # Filter images for this style
+                filter_progress = style_start_progress + int((style_end_progress - style_start_progress) * 0.75)
+                progress(filter_progress, f"Filtering {style_id}")
+                
+                style_filtered = quality_filter.filter_batch(style_images)
+                logger.info(f"Filtered to {len(style_filtered)} images for {style_id}")
+                total_filtered += len(style_filtered)
+                
+                # Upload to MinIO and register in database
+                upload_progress = style_start_progress + int((style_end_progress - style_start_progress) * 0.85)
+                progress(upload_progress, f"Saving {style_id} outputs")
+                
+                style_outputs = []
+                for item in style_filtered:
+                    img = item["image"]
+                    seed = item["seed"]
+                    
+                    # Save to buffer
+                    buf = io.BytesIO()
+                    img.save(buf, format="PNG", quality=95)
+                    buf.seek(0)
+                    
+                    # Upload to MinIO
+                    output_key = f"packs/{pack_id}/outputs/{style_id}_{seed}.png"
+                    storage.upload_bytes(buf.read(), output_key)
+                    
+                    style_outputs.append({
+                        "s3_key": output_key,
+                        "style_preset": style_id,
+                        "seed": seed,
+                        "prompt_used": item.get("prompt", prompt),
+                        "negative_prompt": negative_prompt,
+                        "score": item.get("overall_score"),
+                        "face_similarity": item.get("face_similarity"),
+                        "is_filtered_out": not item.get("passes_filter", True),
+                    })
+                
+                # Register in database via API (INCREMENTAL SAVE!)
+                api_url = settings.api_url
+                if register_outputs_in_database(api_url, pack_id, job_id, style_outputs):
+                    logger.info(f"✅ Saved {len(style_outputs)} outputs for {style_id} to database")
+                else:
+                    logger.warning(f"⚠️ Failed to save {style_id} outputs to database (will retry at end)")
+                
+                all_uploaded.extend(style_outputs)
+                
+                progress(style_end_progress, f"Completed {style_id}")
             
             # Cleanup
             generator.cleanup()
@@ -279,9 +339,9 @@ def process_generate_job(job: dict, queue, storage) -> dict:
             progress(100, "Generation complete")
             
             return {
-                "generated_count": len(generated),
-                "filtered_count": len(filtered),
-                "outputs": uploaded,
+                "generated_count": total_generated,
+                "filtered_count": total_filtered,
+                "outputs": all_uploaded,
             }
             
         except Exception as e:

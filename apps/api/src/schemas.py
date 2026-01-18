@@ -104,6 +104,14 @@ class JobCreateResponse(BaseModel):
     message: str
 
 
+class JobUpdateRequest(BaseModel):
+    """Request to update job status (used by worker)."""
+    status: str | None = None
+    progress: int | None = None
+    current_step: str | None = None
+    error_message: str | None = None
+
+
 # ============================================================================
 # Output Schemas
 # ============================================================================
@@ -133,6 +141,32 @@ class OutputSelectRequest(BaseModel):
     """Request to select/deselect outputs."""
     output_ids: list[UUID]
     selected: bool = True
+
+
+class OutputCreateItem(BaseModel):
+    """Single output to create."""
+    s3_key: str
+    style_preset: str
+    prompt_used: str | None = None
+    negative_prompt: str | None = None
+    seed: float | None = None
+    score: float | None = None
+    face_similarity: float | None = None
+    artifact_score: float | None = None
+    is_filtered_out: bool = False
+    generation_metadata: dict | None = None
+
+
+class OutputBatchCreateRequest(BaseModel):
+    """Request to create multiple outputs at once."""
+    job_id: UUID | None = None
+    outputs: list[OutputCreateItem]
+
+
+class OutputBatchCreateResponse(BaseModel):
+    """Response after creating outputs."""
+    created_count: int
+    output_ids: list[UUID]
 
 
 # ============================================================================

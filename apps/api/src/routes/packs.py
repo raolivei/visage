@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import re
 import uuid
+from datetime import datetime
 
 
 def sanitize_for_log(value: str) -> str:
@@ -29,6 +30,9 @@ from src.schemas import (
     GenerateRequest,
     JobCreateResponse,
     JobResponse,
+    JobUpdateRequest,
+    OutputBatchCreateRequest,
+    OutputBatchCreateResponse,
     OutputListResponse,
     OutputResponse,
     OutputSelectRequest,
@@ -451,6 +455,67 @@ async def list_jobs(
     ]
 
 
+@router.patch("/{pack_id}/jobs/{job_id}", response_model=JobResponse)
+async def update_job_status(
+    pack_id: uuid.UUID,
+    job_id: uuid.UUID,
+    data: JobUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JobResponse:
+    """
+    Update job status (used by worker to sync status to database).
+    
+    This enables the worker to keep PostgreSQL in sync with Redis status.
+    """
+    result = await db.execute(
+        select(Job).where(
+            Job.id == job_id,
+            Job.pack_id == pack_id,
+        )
+    )
+    job = result.scalar_one_or_none()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Update fields if provided
+    if data.status is not None:
+        job.status = data.status
+        if data.status == "processing" and job.started_at is None:
+            job.started_at = datetime.utcnow()
+        elif data.status in ("completed", "failed"):
+            job.completed_at = datetime.utcnow()
+    
+    if data.progress is not None:
+        job.progress = data.progress
+    
+    if data.current_step is not None:
+        job.current_step = data.current_step
+    
+    if data.error_message is not None:
+        job.error_message = data.error_message
+    
+    await db.flush()
+    
+    logger.info(
+        f"Updated job {sanitize_for_log(str(job_id))}: "
+        f"status={job.status}, progress={job.progress}"
+    )
+    
+    return JobResponse(
+        id=job.id,
+        pack_id=job.pack_id,
+        job_type=job.job_type,
+        status=job.status,
+        progress=job.progress,
+        current_step=job.current_step,
+        error_message=job.error_message,
+        created_at=job.created_at,
+        started_at=job.started_at,
+        completed_at=job.completed_at,
+    )
+
+
 # ============================================================================
 # Outputs
 # ============================================================================
@@ -516,6 +581,55 @@ async def select_outputs(
         output.is_selected = data.selected
     
     return {"updated": len(outputs)}
+
+
+@router.post("/{pack_id}/outputs/batch", response_model=OutputBatchCreateResponse)
+async def create_outputs_batch(
+    pack_id: uuid.UUID,
+    data: OutputBatchCreateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create multiple outputs at once (used by worker after generation).
+    
+    This enables incremental saving - outputs can be registered as each
+    style completes rather than waiting for all generation to finish.
+    """
+    # Verify pack exists
+    pack_result = await db.execute(select(Pack).where(Pack.id == pack_id))
+    pack = pack_result.scalar_one_or_none()
+    if not pack:
+        raise HTTPException(status_code=404, detail="Pack not found")
+    
+    created_outputs = []
+    for item in data.outputs:
+        output = Output(
+            pack_id=pack_id,
+            job_id=data.job_id,
+            s3_key=item.s3_key,
+            style_preset=item.style_preset,
+            prompt_used=item.prompt_used,
+            negative_prompt=item.negative_prompt,
+            seed=item.seed,
+            score=item.score,
+            face_similarity=item.face_similarity,
+            artifact_score=item.artifact_score,
+            is_filtered_out=item.is_filtered_out,
+            generation_metadata=item.generation_metadata or {},
+        )
+        db.add(output)
+        created_outputs.append(output)
+    
+    await db.flush()  # Get IDs assigned
+    
+    logger.info(
+        f"Created {len(created_outputs)} outputs for pack {sanitize_for_log(str(pack_id))}"
+    )
+    
+    return OutputBatchCreateResponse(
+        created_count=len(created_outputs),
+        output_ids=[o.id for o in created_outputs],
+    )
 
 
 @router.get("/{pack_id}/outputs/{output_id}/url")
