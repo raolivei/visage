@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,9 +12,41 @@ import {
   Clock,
   Image as ImageIcon,
   Sparkles,
+  RefreshCw,
+  Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, Pack, Photo, Job, Output } from "@/lib/api";
+
+// Parse ETA from current_step (e.g., "Generating executive (15/20)")
+function parseProgressInfo(currentStep: string | null): {
+  currentStyle?: string;
+  currentNum?: number;
+  totalNum?: number;
+} {
+  if (!currentStep) return {};
+  
+  // Match "Generating {style} ({num}/{total})"
+  const match = currentStep.match(/Generating (\w+) \((\d+)\/(\d+)\)/i);
+  if (match) {
+    return {
+      currentStyle: match[1],
+      currentNum: parseInt(match[2]),
+      totalNum: parseInt(match[3]),
+    };
+  }
+  
+  // Match "Training step {num}/{total}"
+  const trainMatch = currentStep.match(/step (\d+)\/(\d+)/i);
+  if (trainMatch) {
+    return {
+      currentNum: parseInt(trainMatch[1]),
+      totalNum: parseInt(trainMatch[2]),
+    };
+  }
+  
+  return {};
+}
 
 export default function PackDetailPage() {
   const params = useParams();
@@ -27,25 +59,10 @@ export default function PackDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  // Load pack data
-  useEffect(() => {
-    loadPackData();
-
-    // Poll for updates if processing
-    const interval = setInterval(() => {
-      if (
-        pack &&
-        ["training", "generating", "filtering"].includes(pack.status)
-      ) {
-        loadPackData();
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [packId]);
-
-  async function loadPackData() {
+  // Memoize loadPackData to avoid useEffect dependency issues
+  const loadPackData = useCallback(async () => {
     try {
       const [packData, photosData, jobsData, outputsData] = await Promise.all([
         api.getPack(packId),
@@ -58,12 +75,32 @@ export default function PackDetailPage() {
       setPhotos(photosData);
       setJobs(jobsData);
       setOutputs(outputsData.outputs);
+      setLastUpdate(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pack");
     } finally {
       setLoading(false);
     }
-  }
+  }, [packId]);
+
+  // Load pack data and poll for updates
+  useEffect(() => {
+    loadPackData();
+
+    // Poll more frequently when there's an active job
+    const interval = setInterval(() => {
+      const hasActiveJob = jobs.some(
+        (j) => j.status === "pending" || j.status === "processing" || j.status === "running"
+      );
+      const isPackProcessing = pack && ["training", "generating", "filtering", "validating"].includes(pack.status);
+      
+      if (hasActiveJob || isPackProcessing) {
+        loadPackData();
+      }
+    }, 3000); // Poll every 3 seconds for more responsive UI
+
+    return () => clearInterval(interval);
+  }, [packId, jobs, pack, loadPackData]);
 
   async function handleStartGeneration() {
     try {
@@ -201,22 +238,82 @@ export default function PackDetailPage() {
                       : "Processing"}
                 </h3>
                 <p className="text-visage-400 text-sm">
-                  {currentJob.current_step || "Please wait..."}
+                  {currentJob.current_step || "Initializing..."}
                 </p>
+                {(() => {
+                  const info = parseProgressInfo(currentJob.current_step);
+                  if (info.currentStyle) {
+                    return (
+                      <p className="text-accent-400 text-xs mt-1">
+                        Style: <span className="capitalize font-medium">{info.currentStyle}</span>
+                        {info.currentNum && info.totalNum && (
+                          <span className="text-visage-500 ml-2">
+                            Image {info.currentNum}/{info.totalNum}
+                          </span>
+                        )}
+                      </p>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-accent-400">
                 {currentJob.progress}%
               </div>
-              <div className="w-32 h-2 bg-visage-800 rounded-full mt-2 overflow-hidden">
+              <div className="w-40 h-2 bg-visage-800 rounded-full mt-2 overflow-hidden">
                 <div
-                  className="h-full bg-accent-500 transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-accent-600 to-accent-400 transition-all duration-1000 ease-out"
                   style={{ width: `${currentJob.progress}%` }}
                 />
               </div>
+              <div className="flex items-center justify-end gap-2 mt-2 text-xs text-visage-500">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Updated {Math.round((Date.now() - lastUpdate.getTime()) / 1000)}s ago
+              </div>
             </div>
           </div>
+          
+          {/* Progress stages for generation */}
+          {currentJob.job_type === "generate" && (
+            <div className="mt-4 pt-4 border-t border-visage-800">
+              <div className="flex justify-between text-xs text-visage-500">
+                <span className={cn(currentJob.progress >= 0 && "text-accent-400")}>
+                  ● Initialize
+                </span>
+                <span className={cn(currentJob.progress >= 15 && "text-accent-400")}>
+                  ● Generate
+                </span>
+                <span className={cn(currentJob.progress >= 80 && "text-accent-400")}>
+                  ● Filter
+                </span>
+                <span className={cn(currentJob.progress >= 95 && "text-accent-400")}>
+                  ● Save
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {/* Progress stages for training */}
+          {currentJob.job_type === "train" && (
+            <div className="mt-4 pt-4 border-t border-visage-800">
+              <div className="flex justify-between text-xs text-visage-500">
+                <span className={cn(currentJob.progress >= 0 && "text-accent-400")}>
+                  ● Load Model
+                </span>
+                <span className={cn(currentJob.progress >= 10 && "text-accent-400")}>
+                  ● Prepare Data
+                </span>
+                <span className={cn(currentJob.progress >= 20 && "text-accent-400")}>
+                  ● Train LoRA
+                </span>
+                <span className={cn(currentJob.progress >= 90 && "text-accent-400")}>
+                  ● Save Weights
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -333,20 +430,44 @@ export default function PackDetailPage() {
 
             {outputs.length === 0 ? (
               <div className="text-center py-12">
-                <Sparkles className="w-12 h-12 mx-auto text-visage-700 mb-4" />
-                <p className="text-visage-500">
-                  {isProcessing
-                    ? "Generating headshots..."
-                    : "No headshots generated yet"}
-                </p>
-                {canStartGeneration && photos.length >= 8 && (
-                  <button
-                    onClick={handleStartGeneration}
-                    disabled={isStarting}
-                    className="btn-primary mt-4"
-                  >
-                    Start Generation
-                  </button>
+                {isProcessing ? (
+                  <>
+                    <div className="relative w-16 h-16 mx-auto mb-4">
+                      <Sparkles className="w-16 h-16 text-accent-400 animate-pulse" />
+                      <div className="absolute inset-0 rounded-full border-2 border-accent-500/30 animate-ping" />
+                    </div>
+                    <p className="text-visage-300 font-medium">
+                      Generating your AI headshots...
+                    </p>
+                    <p className="text-visage-500 text-sm mt-2">
+                      This takes about 15-30 minutes. You can leave this page and come back later.
+                    </p>
+                    <p className="text-accent-400 text-xs mt-4">
+                      <Timer className="w-3 h-3 inline mr-1" />
+                      Outputs will appear here as each style completes
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-12 h-12 mx-auto text-visage-700 mb-4" />
+                    <p className="text-visage-500">
+                      No headshots generated yet
+                    </p>
+                    {canStartGeneration && photos.length >= 8 && (
+                      <button
+                        onClick={handleStartGeneration}
+                        disabled={isStarting}
+                        className="btn-primary mt-4"
+                      >
+                        Start Generation
+                      </button>
+                    )}
+                    {canStartGeneration && photos.length < 8 && (
+                      <p className="text-amber-400 text-sm mt-4">
+                        Upload at least {8 - photos.length} more photos to start generation
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             ) : (

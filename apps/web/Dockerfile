@@ -5,6 +5,9 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+# Use public npm registry (override any global config)
+RUN npm config set registry https://registry.npmjs.org/
+
 # Install dependencies
 COPY package.json package-lock.json* ./
 RUN npm ci
