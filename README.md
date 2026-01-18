@@ -189,13 +189,31 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Configure to connect to ElderTree services
-export API_URL=https://visage.eldertree.local/api
-export REDIS_URL=redis://visage-redis.eldertree.local:6379
-export MINIO_ENDPOINT=minio.eldertree.local:9000
+# Option 1: Connect via production config (requires port-forwards or VPN)
+cp .env.production .env
+./start-production.sh
+
+# Option 2: Connect directly to ElderTree services
+export API_URL=https://visage.eldertree.local
+export REDIS_URL=redis://localhost:6379  # via port-forward
+export MINIO_ENDPOINT=localhost:9002      # via port-forward
+export PUSHGATEWAY_URL=http://localhost:9091
 
 python -m src.main
 ```
+
+### Accessing Services
+
+Once deployed, Visage is accessible via the ElderTree cluster VIP:
+
+| Service    | URL                                |
+|------------|-------------------------------------|
+| Web UI     | https://visage.eldertree.local     |
+| API        | https://visage.eldertree.local/api |
+| MinIO      | https://minio.eldertree.local      |
+| Grafana    | https://grafana.eldertree.local    |
+
+**Note:** Services require DNS resolution via Pi-hole (192.168.2.201) or `/etc/hosts` entries pointing to the MetalLB VIP (192.168.2.200).
 
 ## API Endpoints
 
@@ -268,7 +286,30 @@ See [.github/SECURITY.md](.github/SECURITY.md) for security policy and reporting
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## High Availability (Planned)
+
+Full HA deployment is tracked in [#55 - Epic: Full High Availability](https://github.com/raolivei/visage/issues/55):
+
+| Component  | Current | Target |
+|------------|---------|--------|
+| PostgreSQL | 1 replica | 3 replicas (CloudNativePG) |
+| Redis      | 1 replica | 3 nodes (Sentinel) |
+| MinIO      | 1 replica | Longhorn RWX or Distributed |
+| API        | 1 replica | 2+ replicas with anti-affinity |
+| Web        | 1 replica | 2+ replicas with anti-affinity |
+
+See [docs/HA_DEPLOYMENT.md](docs/HA_DEPLOYMENT.md) for detailed deployment guide.
+
+## Monitoring
+
+Visage metrics are available in the central Grafana at `https://grafana.eldertree.local`:
+
+- **Visage Operations** - Job status, queue depth, API health
+- **Visage Training** - Training progress, loss, ETA, steps
+
+The GPU worker pushes metrics to the Prometheus Pushgateway for central collection.
+
 ## Related
 
-- [ElderTree Cluster](../pi-fleet/) - Kubernetes infrastructure
+- [ElderTree Cluster](https://github.com/raolivei/pi-fleet) - Kubernetes infrastructure
 - [Workspace Config](../workspace-config/) - Port assignments and conventions
