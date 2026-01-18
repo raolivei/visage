@@ -21,7 +21,7 @@ datasources:
       httpMethod: POST
       timeInterval: "5s"
 
-  - name: Redis  
+  - name: Redis
     type: redis-datasource
     access: proxy
     url: redis://redis:6379

@@ -148,10 +148,10 @@ kubectl get pods -n visage -l cnpg.io/cluster=visage-postgres-cluster -w
 
 ```bash
 # Get current master
-kubectl exec -n visage visage-redis-node-0 -- redis-cli -a <password> SENTINEL masters
+kubectl exec -n visage visage-redis-node-1 -- redis-cli -a <password> SENTINEL masters
 
 # Kill master
-kubectl delete pod visage-redis-node-0 -n visage
+kubectl delete pod visage-redis-node-1 -n visage
 
 # Watch sentinel elect new master
 kubectl exec -n visage visage-redis-node-1 -- redis-cli -a <password> SENTINEL masters
@@ -258,7 +258,7 @@ kubectl logs -n visage -l cnpg.io/cluster=visage-postgres-cluster --tail=100
 
 ```bash
 # Check sentinel status
-kubectl exec -n visage visage-redis-node-0 -- redis-cli SENTINEL masters
+kubectl exec -n visage visage-redis-node-1 -- redis-cli SENTINEL masters
 
 # Check sentinel logs
 kubectl logs -n visage -l app.kubernetes.io/component=sentinel --tail=100

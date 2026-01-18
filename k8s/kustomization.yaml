@@ -23,8 +23,8 @@ resources:
   # - externalsecrets.yaml  # Disabled - using K8s secrets directly
   - minio-deployment.yaml
   - postgres-pvc.yaml
-  - postgres-deployment.yaml      # Standalone - replace with postgres-cluster.yaml for HA
-  - redis-deployment.yaml         # Standalone - replace with Redis Helm chart for HA
+  - postgres-deployment.yaml # Standalone - replace with postgres-cluster.yaml for HA
+  - redis-deployment.yaml # Standalone - replace with Redis Helm chart for HA
   - api-deployment.yaml
   - frontend-deployment.yaml
   - ingress.yaml
