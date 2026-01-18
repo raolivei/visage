@@ -55,6 +55,15 @@ generation_duration = Histogram(
     buckets=[5, 10, 20, 30, 60, 120]
 )
 
+# Generation progress metrics (new)
+generation_progress_percent = Gauge('visage_generation_progress_percent', 'Generation job progress percentage')
+generation_current_style = Info('visage_generation_current_style', 'Currently generating style')
+generation_styles_total = Gauge('visage_generation_styles_total', 'Total styles to generate')
+generation_styles_completed = Gauge('visage_generation_styles_completed', 'Styles completed')
+generation_images_per_style = Gauge('visage_generation_images_per_style', 'Images per style')
+generation_current_image = Gauge('visage_generation_current_image', 'Current image number in style')
+generation_eta_seconds = Gauge('visage_generation_eta_seconds', 'Estimated time remaining for generation')
+
 # Quality metrics
 quality_score = Histogram(
     'visage_image_quality_score',
@@ -240,6 +249,29 @@ def record_image_generated(style: str, quality: float = 0.0, similarity: float =
         quality_score.observe(quality)
     if similarity > 0:
         face_similarity_score.observe(similarity)
+
+
+def update_generation_progress(
+    progress_percent: float,
+    current_style: str,
+    styles_total: int,
+    styles_completed: int,
+    images_per_style: int,
+    current_image: int,
+    eta_seconds: float = 0.0,
+):
+    """Update generation progress metrics for Grafana dashboard."""
+    generation_progress_percent.set(progress_percent)
+    generation_current_style.info({'style': current_style})
+    generation_styles_total.set(styles_total)
+    generation_styles_completed.set(styles_completed)
+    generation_images_per_style.set(images_per_style)
+    generation_current_image.set(current_image)
+    if eta_seconds > 0:
+        generation_eta_seconds.set(eta_seconds)
+    
+    # Push immediately for real-time updates
+    push_metrics_now()
 
 def record_image_filtered(reason: str):
     """Record filtered image."""

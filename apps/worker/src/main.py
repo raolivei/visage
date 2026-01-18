@@ -25,6 +25,8 @@ from .metrics import (
     update_job_status,
     record_job_duration,
     update_queue_metrics,
+    update_generation_progress,
+    record_image_generated,
     jobs_in_progress,
 )
 
@@ -268,6 +270,17 @@ def process_generate_job(job: dict, queue, storage) -> dict:
                 
                 progress(style_start_progress, f"Generating {style_id} (style {style_idx + 1}/{len(prompts)})")
                 
+                # Update Grafana metrics for this style
+                update_generation_progress(
+                    progress_percent=style_start_progress,
+                    current_style=style_id,
+                    styles_total=len(prompts),
+                    styles_completed=style_idx,
+                    images_per_style=num_per_style,
+                    current_image=0,
+                    eta_seconds=(len(prompts) - style_idx) * num_per_style * 180,  # ~3 min per image
+                )
+                
                 # Generate images for this style
                 def style_gen_progress(p: int, s: str):
                     # Map 0-100 to style's progress range (first 70% of style's share)
@@ -283,6 +296,10 @@ def process_generate_job(job: dict, queue, storage) -> dict:
                 
                 logger.info(f"Generated {len(style_images)} images for {style_id}")
                 total_generated += len(style_images)
+                
+                # Record metrics for each generated image
+                for img_data in style_images:
+                    record_image_generated(style=style_id)
                 
                 # Filter images for this style
                 filter_progress = style_start_progress + int((style_end_progress - style_start_progress) * 0.75)
@@ -331,6 +348,17 @@ def process_generate_job(job: dict, queue, storage) -> dict:
                 all_uploaded.extend(style_outputs)
                 
                 progress(style_end_progress, f"Completed {style_id}")
+                
+                # Update metrics after style completion
+                update_generation_progress(
+                    progress_percent=style_end_progress,
+                    current_style=style_id,
+                    styles_total=len(prompts),
+                    styles_completed=style_idx + 1,
+                    images_per_style=num_per_style,
+                    current_image=num_per_style,
+                    eta_seconds=(len(prompts) - style_idx - 1) * num_per_style * 180,
+                )
             
             # Cleanup
             generator.cleanup()
