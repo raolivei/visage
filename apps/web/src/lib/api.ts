@@ -214,6 +214,13 @@ class ApiClient {
     return this.fetch(`/api/packs/${packId}/outputs/${outputId}/url`);
   }
 
+  /**
+   * Get download URL for selected outputs as ZIP.
+   */
+  getDownloadUrl(packId: string, selectedOnly = true): string {
+    return `${this.baseUrl}/api/packs/${packId}/outputs/download?selected_only=${selectedOnly}`;
+  }
+
   // Styles
   async listStyles(): Promise<{ styles: StylePreset[] }> {
     return this.fetch("/api/packs/styles");

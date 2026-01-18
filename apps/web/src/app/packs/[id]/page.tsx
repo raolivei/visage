@@ -213,10 +213,14 @@ export default function PackDetailPage() {
             </button>
           )}
           {pack.status === "completed" && selectedCount > 0 && (
-            <button className="btn-primary">
+            <a
+              href={api.getDownloadUrl(packId)}
+              className="btn-primary inline-flex items-center"
+              download
+            >
               <Download className="w-5 h-5 mr-2" />
               Download ({selectedCount})
-            </button>
+            </a>
           )}
         </div>
       </div>

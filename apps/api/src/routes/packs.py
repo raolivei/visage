@@ -5,9 +5,11 @@ Endpoints for managing headshot packs.
 """
 from __future__ import annotations
 
+import io
 import logging
 import re
 import uuid
+import zipfile
 from datetime import datetime
 
 
@@ -654,6 +656,62 @@ async def get_output_url(
     url = storage.get_presigned_url(output.s3_key, expires_in=3600)
     
     return {"url": url, "expires_in": 3600}
+
+
+@router.get("/{pack_id}/outputs/download")
+async def download_outputs(
+    pack_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    selected_only: bool = True,
+):
+    """
+    Download selected outputs as a ZIP file.
+    
+    Creates a ZIP archive containing all selected (or all) outputs for the pack.
+    """
+    from fastapi.responses import StreamingResponse
+    
+    # Get outputs
+    query = select(Output).where(Output.pack_id == pack_id)
+    if selected_only:
+        query = query.where(Output.is_selected == True)
+    
+    result = await db.execute(query)
+    outputs = result.scalars().all()
+    
+    if not outputs:
+        raise HTTPException(status_code=404, detail="No outputs found to download")
+    
+    storage = get_storage_service()
+    
+    # Create ZIP in memory
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for output in outputs:
+            try:
+                # Download image from MinIO
+                image_data = storage.download_file(output.s3_key)
+                
+                # Create filename: style_seed.png
+                filename = Path(output.s3_key).name
+                if output.style_preset:
+                    filename = f"{output.style_preset}_{filename}"
+                
+                zip_file.writestr(filename, image_data)
+            except Exception as e:
+                logger.warning(f"Failed to add {output.s3_key} to ZIP: {e}")
+    
+    zip_buffer.seek(0)
+    
+    # Return as streaming response
+    pack_name = str(pack_id)[:8]
+    return StreamingResponse(
+        zip_buffer,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename=visage-{pack_name}-headshots.zip"
+        }
+    )
 
 
 # ============================================================================
