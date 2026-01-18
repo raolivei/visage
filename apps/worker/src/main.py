@@ -181,6 +181,44 @@ def register_outputs_in_database(api_url: str, pack_id: str, job_id: str, output
         return False
 
 
+def sync_job_status_to_db(
+    api_url: str, 
+    pack_id: str, 
+    job_id: str, 
+    status: str,
+    progress: int = None,
+    current_step: str = None,
+    error_message: str = None
+) -> bool:
+    """
+    Sync job status from Redis to PostgreSQL via API call.
+    
+    This keeps the PostgreSQL database in sync with the worker's progress
+    so the web UI and API can show accurate status.
+    """
+    import httpx
+    
+    payload = {"status": status}
+    if progress is not None:
+        payload["progress"] = progress
+    if current_step is not None:
+        payload["current_step"] = current_step
+    if error_message is not None:
+        payload["error_message"] = error_message
+    
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            response = client.patch(
+                f"{api_url}/api/packs/{pack_id}/jobs/{job_id}",
+                json=payload,
+            )
+            response.raise_for_status()
+            return True
+    except Exception as e:
+        logger.warning(f"Failed to sync job status to database: {e}")
+        return False
+
+
 def process_generate_job(job: dict, queue, storage) -> dict:
     """
     Process a generation job with INCREMENTAL SAVING.
@@ -450,6 +488,12 @@ def main():
             jobs_in_progress.labels(job_type=job_type).set(1)
             job_start_time = time.time()
             
+            # Sync job status to PostgreSQL (started)
+            sync_job_status_to_db(
+                settings.api_url, pack_id, job_id, 
+                "processing", progress=0, current_step="Starting..."
+            )
+            
             try:
                 result = process_job(job, queue, storage)
                 queue.complete_job(job_id, result=result)
@@ -459,6 +503,12 @@ def main():
                 record_job_duration(job_type, job_duration)
                 update_job_status(job_type, "completed", in_progress=False)
                 
+                # Sync job completion to PostgreSQL
+                sync_job_status_to_db(
+                    settings.api_url, pack_id, job_id,
+                    "completed", progress=100, current_step="Complete"
+                )
+                
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"Job {job_id} failed: {error_msg}")
@@ -466,6 +516,12 @@ def main():
                 
                 # Record failure metrics
                 update_job_status(job_type, "failed", in_progress=False)
+                
+                # Sync job failure to PostgreSQL
+                sync_job_status_to_db(
+                    settings.api_url, pack_id, job_id,
+                    "failed", error_message=error_msg
+                )
                 
                 # Update pack status to failed
                 if pack_id:
