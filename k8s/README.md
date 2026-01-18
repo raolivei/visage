@@ -99,13 +99,47 @@ vault kv put secret/visage/app \
 
 ## Accessing Locally
 
-Add to `/etc/hosts` or configure Pi-hole:
+Services are accessible via the MetalLB VIP (192.168.2.200).
+
+**Option 1: Pi-hole (Recommended)**
+
+Configure Pi-hole as your DNS server. It automatically resolves `*.eldertree.local`.
+
+**Option 2: /etc/hosts**
+
+Add to `/etc/hosts`:
 
 ```
-192.168.2.201  visage.eldertree.local
+# ElderTree k8s Cluster VIP (Traefik Ingress)
+192.168.2.200  visage.eldertree.local
+192.168.2.200  grafana.eldertree.local
+192.168.2.200  prometheus.eldertree.local
+192.168.2.200  minio.eldertree.local
 ```
 
 Then access: https://visage.eldertree.local
+
+## Network Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    ElderTree Cluster                         │
+│                                                               │
+│  Nodes:                                                       │
+│  ├── node-1: 192.168.2.101 (wlan0)                          │
+│  ├── node-2: 192.168.2.102 (wlan0)                          │
+│  └── node-3: 192.168.2.103 (wlan0)                          │
+│                                                               │
+│  VIPs (MetalLB L2):                                          │
+│  ├── Traefik: 192.168.2.200 (HTTPS ingress)                 │
+│  └── Pi-hole: 192.168.2.201 (DNS)                           │
+│                                                               │
+│  k3s Networks:                                               │
+│  ├── Pods:     10.42.0.0/16                                 │
+│  ├── Services: 10.43.0.0/16                                 │
+│  └── Internal: 10.0.0.0/24 (eth0)                           │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## GPU Worker
 
@@ -129,13 +163,17 @@ python -m src.main
 
 ### DNS Configuration
 
-Add to Pi-hole or `/etc/hosts`:
+DNS is handled by Pi-hole (192.168.2.201) which resolves all `*.eldertree.local` domains.
+
+If not using Pi-hole, add to `/etc/hosts`:
 
 ```
+# ElderTree k8s Cluster VIP
 192.168.2.200  visage.eldertree.local
 192.168.2.200  minio.eldertree.local
 192.168.2.200  pushgateway.eldertree.local
 192.168.2.200  grafana.eldertree.local
+192.168.2.200  prometheus.eldertree.local
 ```
 
 ### Monitoring

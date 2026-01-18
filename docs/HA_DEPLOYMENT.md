@@ -2,6 +2,29 @@
 
 This document describes how to deploy Visage with full high availability on the ElderTree k3s cluster.
 
+> **Status:** HA infrastructure is planned but not yet fully implemented.
+> See GitHub Issues for tracking:
+> - [#55 - Epic: Full High Availability](https://github.com/raolivei/visage/issues/55)
+> - [#51 - PostgreSQL HA](https://github.com/raolivei/visage/issues/51)
+> - [#52 - Redis HA](https://github.com/raolivei/visage/issues/52)
+> - [#53 - MinIO HA](https://github.com/raolivei/visage/issues/53)
+> - [#54 - API/Web Multi-Replica](https://github.com/raolivei/visage/issues/54)
+
+## Current State (January 2026)
+
+| Component  | Replicas | Node   | HA Status |
+|------------|----------|--------|-----------|
+| PostgreSQL | 1        | node-1 | ❌ SPOF   |
+| Redis      | 1        | node-1 | ❌ SPOF   |
+| MinIO      | 1        | node-1 | ❌ SPOF   |
+| API        | 1        | node-1 | ❌ SPOF   |
+| Web        | 1        | node-1 | ❌ SPOF   |
+| Worker     | 1        | Mac    | N/A (GPU) |
+
+**Network:**
+- VIP: 192.168.2.200 (Traefik Ingress via MetalLB L2)
+- Nodes: 192.168.2.101-103
+
 ## Architecture Overview
 
 ```

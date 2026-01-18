@@ -15,6 +15,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### High Availability Infrastructure (January 2026)
+
+- **GitHub Issues for Full HA Deployment**:
+  - #51 - PostgreSQL HA with CloudNativePG (3-node cluster)
+  - #52 - Redis HA with Sentinel (automatic failover)
+  - #53 - MinIO distributed mode or Longhorn RWX
+  - #54 - API/Web multi-replica with pod anti-affinity
+  - #55 - Epic: Full High Availability tracking issue
+
+- **Hybrid Worker Architecture**:
+  - GPU worker runs on Mac (MPS) while services run on k8s
+  - Worker connects to ElderTree via port-forwards or DNS
+  - Metrics pushed to central Prometheus Pushgateway
+  - Checkpointing to MinIO for training resilience
+
+- **Monitoring Integration**:
+  - Visage Training dashboard in central Grafana
+  - Visage Operations dashboard for job/queue metrics
+  - Metrics flow: Worker → Pushgateway → Prometheus → Grafana
+
+#### A/B Testing Infrastructure
+
+- Model preset configuration (`MODEL_PRESETS` in config.py)
+- Support for alternative base models (Juggernaut XL, RealVisXL, LEOSAM)
+- GitHub issue #48 for A/B testing alternative models
+
 #### Commercial Quality Pipeline
 
 - **Photo Validator** (`apps/worker/src/pipeline/validator.py`)
