@@ -1,0 +1,41 @@
+# Monitoring Configuration for Visage
+# Self-hosted AI headshot generator with external GPU worker
+# Dashboard: https://grafana.eldertree.local/d/visage-dashboard
+
+app:
+  name: "Visage"
+  namespace: "visage"
+  type: gpu-worker
+
+  components:
+    api:
+      service: visage-api
+      port: 8000
+      metrics: true  # Has /metrics endpoint via prometheus_fastapi_instrumentator
+
+    web:
+      service: visage-web
+      port: 3000
+
+    postgres:
+      service: visage-postgres
+      port: 5432
+
+    redis:
+      service: visage-redis
+      port: 6379
+
+    minio:
+      service: visage-minio
+      port: 9000
+
+  alerts:
+    cpu_threshold: 85
+    memory_threshold: 90
+    enabled: true
+    severity: warning
+
+  external_worker:
+    enabled: true
+    job_name: "visage-worker"
+    pushgateway: "pushgateway.eldertree.local"

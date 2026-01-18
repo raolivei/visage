@@ -650,6 +650,23 @@ QUALITY_THRESHOLDS = {
 # Helper Functions
 # =============================================================================
 
+# Style aliases for simpler names
+STYLE_ALIASES = {
+    "creative": "creative_modern",
+    "studio": "studio_classic", 
+    "natural": "natural_light",
+    "friendly": "friendly_approachable",
+    "tech": "tech_startup",
+    "medical": "healthcare",
+    "professor": "academic",
+    "lawyer": "legal_finance",
+    "speaker": "speaker_author",
+    "actor": "actor_model",
+    "bold": "bold_confident",
+    "clean": "minimalist",
+}
+
+
 def get_prompt_for_style(
     style: str, 
     trigger_token: str = "@visageUser",
@@ -659,17 +676,20 @@ def get_prompt_for_style(
     Get the prompt and negative prompt for a given style.
     
     Args:
-        style: Style preset key
+        style: Style preset key (supports aliases like 'creative' -> 'creative_modern')
         trigger_token: The LoRA trigger token to use
         variation: Specific variation index (None = random)
         
     Returns:
         Tuple of (prompt, negative_prompt)
     """
-    if style not in STYLE_PRESETS:
-        raise ValueError(f"Unknown style: {style}. Available: {list(STYLE_PRESETS.keys())}")
+    # Resolve aliases
+    resolved_style = STYLE_ALIASES.get(style, style)
     
-    preset = STYLE_PRESETS[style]
+    if resolved_style not in STYLE_PRESETS:
+        raise ValueError(f"Unknown style: {style}. Available: {list(STYLE_PRESETS.keys())} or aliases: {list(STYLE_ALIASES.keys())}")
+    
+    preset = STYLE_PRESETS[resolved_style]
     variations = preset["variations"]
     
     # Select variation

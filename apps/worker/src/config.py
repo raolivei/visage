@@ -9,6 +9,30 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings
 
 
+# =============================================================================
+# Model Presets - Portrait-optimized alternatives to vanilla SDXL
+# =============================================================================
+
+MODEL_PRESETS = {
+    "sdxl": {
+        "model_id": "stabilityai/stable-diffusion-xl-base-1.0",
+        "description": "Vanilla SDXL - good general purpose",
+    },
+    "juggernaut": {
+        "model_id": "RunDiffusion/Juggernaut-XL-v9",
+        "description": "Juggernaut XL - excellent faces, photorealistic",
+    },
+    "realvis": {
+        "model_id": "SG161222/RealVisXL_V4.0",
+        "description": "RealVisXL - ultra photorealistic",
+    },
+    "leosam": {
+        "model_id": "LEOSAM/HelloWorld-XL",
+        "description": "LEOSAM HelloWorld - portrait-optimized",
+    },
+}
+
+
 class Settings(BaseSettings):
     """Worker settings loaded from environment variables."""
 
@@ -32,8 +56,14 @@ class Settings(BaseSettings):
     device: str = "auto"  # auto, mps, cuda, cpu
     
     # Model configuration
-    model_id: str = "stabilityai/stable-diffusion-xl-base-1.0"
+    model_preset: str = "sdxl"  # sdxl, juggernaut, realvis, leosam
     vae_id: str = "madebyollin/sdxl-vae-fp16-fix"
+    
+    @property
+    def model_id(self) -> str:
+        """Get model ID from preset, with fallback to SDXL."""
+        preset = MODEL_PRESETS.get(self.model_preset, MODEL_PRESETS["sdxl"])
+        return preset["model_id"]
     
     # LoRA training defaults
     lora_rank: int = 32
@@ -43,7 +73,7 @@ class Settings(BaseSettings):
     lora_batch_size: int = 1
     
     # Generation defaults
-    num_inference_steps: int = 30
+    num_inference_steps: int = 40  # Increased for better quality (30 was default)
     guidance_scale: float = 7.5
     image_width: int = 1024
     image_height: int = 1024
