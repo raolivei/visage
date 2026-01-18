@@ -426,9 +426,38 @@ export default function PackDetailPage() {
                 Generated Headshots ({outputs.length})
               </h2>
               {outputs.length > 0 && (
-                <span className="text-sm text-visage-400">
-                  {selectedCount} selected
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-visage-400">
+                    {selectedCount} selected
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={async () => {
+                        const unselected = outputs.filter(o => !o.is_selected);
+                        if (unselected.length > 0) {
+                          await api.selectOutputs(packId, unselected.map(o => o.id), true);
+                          setOutputs(prev => prev.map(o => ({ ...o, is_selected: true })));
+                        }
+                      }}
+                      className="text-xs text-accent-400 hover:text-accent-300"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-visage-600">|</span>
+                    <button
+                      onClick={async () => {
+                        const selected = outputs.filter(o => o.is_selected);
+                        if (selected.length > 0) {
+                          await api.selectOutputs(packId, selected.map(o => o.id), false);
+                          setOutputs(prev => prev.map(o => ({ ...o, is_selected: false })));
+                        }
+                      }}
+                      className="text-xs text-visage-400 hover:text-visage-300"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
 
