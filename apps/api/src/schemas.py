@@ -111,6 +111,9 @@ class OutputResponse(BaseModel):
     style_preset: str | None
     score: float | None
     is_selected: bool
+    user_rating: bool | None = None  # True=thumbs up, False=thumbs down, None=unrated
+    rating_reason: str | None = None
+    rated_at: datetime | None = None
     created_at: datetime
     # URLs are generated separately via presigned URLs
 
@@ -123,12 +126,29 @@ class OutputListResponse(BaseModel):
     outputs: list[OutputResponse]
     total: int
     selected_count: int
+    liked_count: int = 0  # Number of thumbs up
+    disliked_count: int = 0  # Number of thumbs down
 
 
 class OutputSelectRequest(BaseModel):
     """Request to select/deselect outputs."""
     output_ids: list[UUID]
     selected: bool = True
+
+
+class OutputRatingRequest(BaseModel):
+    """Request to rate an output."""
+    rating: bool  # True = thumbs up (like), False = thumbs down (dislike)
+    reason: str | None = None  # Optional feedback text
+
+
+class OutputRatingResponse(BaseModel):
+    """Response after rating an output."""
+    id: UUID
+    user_rating: bool
+    rating_reason: str | None
+    rated_at: datetime
+    message: str = "Rating saved"
 
 
 # ============================================================================
