@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ============================================================================
@@ -83,15 +83,19 @@ class JobResponse(BaseModel):
     pack_id: UUID
     job_type: str
     status: str
-    progress: int
-    current_step: str | None
-    error_message: str | None
+    progress: int | None = 0
+    current_step: str | None = None
+    error_message: str | None = None
     created_at: datetime
-    started_at: datetime | None
-    completed_at: datetime | None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
+    
+    @field_validator("progress", mode="before")
+    @classmethod
+    def progress_default(cls, v):
+        return v if v is not None else 0
 
 
 class JobCreateResponse(BaseModel):
