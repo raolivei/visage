@@ -60,7 +60,7 @@ class PhotoResponse(BaseModel):
     is_valid: str
     face_detected: str
     created_at: datetime
-    # Note: s3_key not exposed, use presigned URL endpoint
+    url: str  # Direct URL for browser access
 
     class Config:
         from_attributes = True
@@ -124,7 +124,7 @@ class OutputResponse(BaseModel):
     score: float | None
     is_selected: bool
     created_at: datetime
-    # URLs are generated separately via presigned URLs
+    url: str  # Presigned URL for browser access
 
     class Config:
         from_attributes = True

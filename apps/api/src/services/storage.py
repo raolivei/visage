@@ -28,7 +28,8 @@ class StorageService:
     """
 
     def __init__(self):
-        """Initialize S3 client."""
+        """Initialize S3 clients."""
+        # Internal client for uploads/downloads (uses Docker network hostname)
         endpoint_url = f"{'https' if settings.minio_secure else 'http'}://{settings.minio_endpoint}"
         
         self.client = boto3.client(
@@ -39,6 +40,18 @@ class StorageService:
             config=Config(signature_version="s3v4"),
             region_name="us-east-1",  # Required for MinIO
         )
+        
+        # Public client for presigned URLs (uses browser-accessible hostname)
+        public_endpoint_url = f"{'https' if settings.minio_secure else 'http'}://{settings.minio_public_endpoint}"
+        self.public_client = boto3.client(
+            "s3",
+            endpoint_url=public_endpoint_url,
+            aws_access_key_id=settings.minio_access_key,
+            aws_secret_access_key=settings.minio_secret_key,
+            config=Config(signature_version="s3v4"),
+            region_name="us-east-1",
+        )
+        
         self.bucket = settings.minio_bucket
         self._ensure_bucket()
 
@@ -149,6 +162,8 @@ class StorageService:
         """
         Generate a presigned URL for temporary access.
         
+        Uses the public_client which is configured with browser-accessible endpoint.
+        
         Args:
             key: S3 object key
             expires_in: URL expiration in seconds (default 1 hour)
@@ -158,7 +173,7 @@ class StorageService:
             Presigned URL string
         """
         try:
-            url = self.client.generate_presigned_url(
+            url = self.public_client.generate_presigned_url(
                 method,
                 Params={"Bucket": self.bucket, "Key": key},
                 ExpiresIn=expires_in,

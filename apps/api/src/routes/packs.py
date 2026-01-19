@@ -329,18 +329,24 @@ async def list_photos(
     )
     photos = result.scalars().all()
     
-    return [
-        PhotoResponse(
-            id=p.id,
-            pack_id=p.pack_id,
-            original_filename=p.original_filename,
-            quality_score=p.quality_score,
-            is_valid=p.is_valid,
-            face_detected=p.face_detected,
-            created_at=p.created_at,
+    # Generate direct URLs for each photo (bucket is public)
+    photo_responses = []
+    for p in photos:
+        url = f"http://localhost:9000/{settings.minio_bucket}/{p.s3_key}" if p.s3_key else ""
+        photo_responses.append(
+            PhotoResponse(
+                id=p.id,
+                pack_id=p.pack_id,
+                original_filename=p.original_filename,
+                quality_score=p.quality_score,
+                is_valid=p.is_valid,
+                face_detected=p.face_detected,
+                created_at=p.created_at,
+                url=url,
+            )
         )
-        for p in photos
-    ]
+    
+    return photo_responses
 
 
 # ============================================================================
@@ -543,17 +549,22 @@ async def list_outputs(
     result = await db.execute(query)
     outputs = result.scalars().all()
     
-    output_responses = [
-        OutputResponse(
-            id=o.id,
-            pack_id=o.pack_id,
-            style_preset=o.style_preset,
-            score=o.score,
-            is_selected=o.is_selected,
-            created_at=o.created_at,
+    # Generate direct URLs (bucket is public)
+    output_responses = []
+    for o in outputs:
+        # Direct URL to MinIO (bucket is public for anonymous download)
+        url = f"http://localhost:9000/{settings.minio_bucket}/{o.s3_key}" if o.s3_key else ""
+        output_responses.append(
+            OutputResponse(
+                id=o.id,
+                pack_id=o.pack_id,
+                style_preset=o.style_preset,
+                score=o.score,
+                is_selected=o.is_selected,
+                created_at=o.created_at,
+                url=url,
+            )
         )
-        for o in outputs
-    ]
     
     selected_count = sum(1 for o in outputs if o.is_selected)
     
