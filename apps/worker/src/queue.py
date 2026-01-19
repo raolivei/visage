@@ -174,6 +174,77 @@ class QueueClient:
             logger.error(f"Failed to add log: {e}")
             return False
 
+    def enqueue_job(
+        self,
+        pack_id: str,
+        job_type: str,
+        parameters: dict[str, Any] | None = None,
+    ) -> str:
+        """
+        Enqueue a new job.
+        
+        Args:
+            pack_id: Pack identifier
+            job_type: Job type (train, generate)
+            parameters: Job parameters
+            
+        Returns:
+            Job ID
+        """
+        import uuid
+        import time
+        
+        try:
+            job_id = str(uuid.uuid4())
+            job_key = f"{self.QUEUE_PREFIX}:{job_id}:data"
+            
+            job_data = {
+                "id": job_id,
+                "pack_id": pack_id,
+                "type": job_type,
+                "status": "pending",
+                "progress": "0",
+                "created_at": datetime.utcnow().isoformat(),
+                "parameters": json.dumps(parameters or {}),
+            }
+            
+            # Store job data
+            self.redis.hset(job_key, mapping=job_data)
+            
+            # Add to pending queue (priority based on timestamp)
+            self.redis.zadd(self.PENDING_QUEUE, {job_id: time.time()})
+            
+            logger.info(f"Enqueued job {job_id} type={job_type} for pack {pack_id}")
+            return job_id
+            
+        except redis.RedisError as e:
+            logger.error(f"Failed to enqueue job: {e}")
+            raise
+
+    def get_pending_job_counts(self) -> dict[str, int]:
+        """Get counts of pending jobs by type."""
+        try:
+            # Get all pending job IDs
+            pending_ids = self.redis.zrange(self.PENDING_QUEUE, 0, -1)
+            counts = {"train": 0, "generate": 0}
+            
+            for job_id in pending_ids:
+                job_key = f"{self.QUEUE_PREFIX}:{job_id}:data"
+                job_type = self.redis.hget(job_key, "type")
+                if job_type in counts:
+                    counts[job_type] += 1
+            
+            return counts
+        except redis.RedisError:
+            return {"train": 0, "generate": 0}
+
+    def get_processing_job_count(self) -> int:
+        """Get count of currently processing jobs."""
+        try:
+            return self.redis.scard(self.PROCESSING_SET)
+        except redis.RedisError:
+            return 0
+
     def health_check(self) -> bool:
         """Check Redis connection health."""
         try:

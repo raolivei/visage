@@ -24,6 +24,14 @@ class PackCreate(BaseModel):
     )
 
 
+class PackUpdate(BaseModel):
+    """Request to update a pack (used by worker)."""
+    status: str | None = None
+    error_message: str | None = None
+    style_preset: str | None = None
+    style_presets: list[str] | None = None
+
+
 class PackResponse(BaseModel):
     """Pack details response."""
     id: UUID

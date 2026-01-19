@@ -41,6 +41,7 @@ from src.schemas import (
     PackCreate,
     PackListResponse,
     PackResponse,
+    PackUpdate,
     PhotoResponse,
     PhotoUploadResponse,
     StyleListResponse,
@@ -179,6 +180,42 @@ async def get_pack(
     output_count = output_count_result.scalar() or 0
     
     return pack_to_response(pack, photo_count, output_count)
+
+
+@router.patch("/{pack_id}", response_model=PackResponse)
+async def update_pack(
+    pack_id: uuid.UUID,
+    data: PackUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> PackResponse:
+    """Update pack status and metadata (used by worker)."""
+    result = await db.execute(
+        select(Pack).where(Pack.id == pack_id)
+    )
+    pack = result.scalar_one_or_none()
+    
+    if not pack:
+        raise HTTPException(status_code=404, detail="Pack not found")
+    
+    # Update fields if provided
+    if data.status is not None:
+        pack.status = data.status
+    if data.error_message is not None:
+        pack.error_message = data.error_message
+    if data.style_preset is not None:
+        pack.style_preset = data.style_preset
+    if data.style_presets is not None:
+        pack.style_presets = data.style_presets
+    
+    await db.flush()
+    
+    logger.info(
+        "Updated pack %s status=%s", 
+        sanitize_for_log(pack_id), 
+        sanitize_for_log(pack.status)
+    )
+    
+    return pack_to_response(pack)
 
 
 @router.delete("/{pack_id}", status_code=status.HTTP_204_NO_CONTENT)

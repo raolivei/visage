@@ -160,11 +160,12 @@ export default function PackDetailPage() {
     "generating",
     "filtering",
     "validating",
+    "processing",
   ].includes(pack.status);
   const canStartGeneration =
-    pack.status === "uploading" || pack.status === "created";
+    pack.status === "uploading" || pack.status === "created" || pack.status === "ready";
   const currentJob = jobs.find(
-    (j) => j.status === "running" || j.status === "pending"
+    (j) => j.status === "running" || j.status === "pending" || j.status === "processing"
   );
   const selectedCount = outputs.filter((o) => o.is_selected).length;
 

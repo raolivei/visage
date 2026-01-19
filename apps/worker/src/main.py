@@ -54,15 +54,22 @@ def signal_handler(signum, frame):
 
 def update_pack_status(pack_id: str, status: str, error: str | None = None):
     """Update pack status via API."""
+    import httpx
+    
     try:
-        # NOTE: In production, call the API to update pack status
-        # httpx.patch(
-        #     f"{settings.api_url}/api/packs/{pack_id}",
-        #     json={"status": status, "error_message": error}
-        # )
+        payload = {"status": status}
+        if error:
+            payload["error_message"] = error
+            
+        with httpx.Client(timeout=10.0) as client:
+            response = client.patch(
+                f"{settings.api_url}/api/packs/{pack_id}",
+                json=payload,
+            )
+            response.raise_for_status()
         logger.info(f"Pack {pack_id} status updated to {status}")
     except Exception as e:
-        logger.error(f"Failed to update pack status: {e}")
+        logger.warning(f"Failed to update pack status: {e}")
 
 
 def process_train_job(job: dict, queue, storage) -> dict:
@@ -80,14 +87,18 @@ def process_train_job(job: dict, queue, storage) -> dict:
     
     logger.info(f"Processing training job {job_id} for pack {pack_id}")
     
+    api_url = settings.api_url
+    
     # Create temp directory for processing
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         
-        # Progress callback
+        # Progress callback - syncs to both Redis AND PostgreSQL for real-time UI
         def progress(pct: int, step: str):
             queue.update_progress(job_id, pct, step)
             queue.add_log(job_id, step)
+            # Sync to PostgreSQL so web UI shows accurate progress
+            sync_job_status_to_db(api_url, pack_id, job_id, "processing", pct, step)
         
         try:
             # Download photos
@@ -140,10 +151,32 @@ def process_train_job(job: dict, queue, storage) -> dict:
             
             progress(90, "Training complete, queuing generation")
             
+            # AUTO-START GENERATION after training completes
+            # This ensures the pipeline is seamless without manual intervention
+            style_presets = params.get("style_presets", [
+                "corporate", "creative", "studio", "executive", "natural"
+            ])
+            num_per_style = params.get("num_images_per_style", 20)
+            
+            logger.info(f"Auto-starting generation job for {len(style_presets)} styles")
+            
+            generation_job_id = queue.enqueue_job(
+                pack_id=pack_id,
+                job_type="generate",
+                parameters={
+                    "style_presets": style_presets,
+                    "num_images_per_style": num_per_style,
+                }
+            )
+            
+            logger.info(f"Generation job queued: {generation_job_id}")
+            progress(95, f"Generation queued ({len(style_presets)} styles)")
+            
             return {
                 "lora_path": lora_s3_key,
                 "photo_count": len(photo_paths),
-                "style_presets": params.get("style_presets", ["corporate"]),
+                "style_presets": style_presets,
+                "generation_job_id": generation_job_id,
             }
             
         except Exception as e:
@@ -237,12 +270,17 @@ def process_generate_job(job: dict, queue, storage) -> dict:
     
     logger.info(f"Processing generation job {job_id} for pack {pack_id}")
     
+    api_url = settings.api_url
+    
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = Path(tmpdir)
         
         def progress(pct: int, step: str):
+            """Update progress in both Redis AND PostgreSQL for real-time UI updates."""
             queue.update_progress(job_id, pct, step)
             queue.add_log(job_id, step)
+            # Sync to PostgreSQL so web UI shows accurate progress
+            sync_job_status_to_db(api_url, pack_id, job_id, "processing", pct, step)
         
         try:
             # Download LoRA
