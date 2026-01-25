@@ -23,6 +23,9 @@ onnxruntime>=1.16.0
 # Background removal (optional)
 rembg>=2.0.50
 
+# Watermark removal (LaMa inpainting)
+simple-lama-inpainting>=0.1.0
+
 # Quality scoring - CLIP aesthetic
 # Note: CLIP requires special install - see README
 # pip install git+https://github.com/openai/CLIP.git

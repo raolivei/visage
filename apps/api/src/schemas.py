@@ -67,8 +67,9 @@ class PhotoResponse(BaseModel):
     quality_score: float | None
     is_valid: str
     face_detected: str
+    watermark_removed: bool = False
     created_at: datetime
-    url: str  # Direct URL for browser access
+    url: str = ""  # Direct URL for browser access
 
     class Config:
         from_attributes = True
@@ -79,6 +80,7 @@ class PhotoUploadResponse(BaseModel):
     uploaded: int
     photos: list[PhotoResponse]
     errors: list[str] = []
+    watermark_job_id: str | None = None  # Job ID if watermark removal queued
 
 
 # ============================================================================

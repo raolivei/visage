@@ -13,7 +13,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.config import get_settings
 from src.database import close_db, init_db
-from src.routes import health_router, packs_router
+from src.routes import health_router, packs_router, watermark_router
 
 # Configure logging
 logging.basicConfig(
@@ -63,6 +63,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health_router)
 app.include_router(packs_router, prefix=settings.api_prefix)
+app.include_router(watermark_router, prefix=settings.api_prefix)
 
 # Prometheus metrics endpoint
 Instrumentator().instrument(app).expose(app, endpoint="/metrics")

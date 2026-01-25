@@ -9,6 +9,7 @@ from .trainer import LoRATrainer
 from .generator import ImageGenerator
 from .filter import QualityFilter, QualityScores
 from .postprocess import PostProcessor, PostProcessConfig
+from .watermark_remover import WatermarkRemover, WatermarkDetector, WatermarkResult, DetectionResult
 
 __all__ = [
     # Validation
@@ -26,4 +27,9 @@ __all__ = [
     # Post-processing
     "PostProcessor",
     "PostProcessConfig",
+    # Watermark removal
+    "WatermarkRemover",
+    "WatermarkDetector",
+    "WatermarkResult",
+    "DetectionResult",
 ]
