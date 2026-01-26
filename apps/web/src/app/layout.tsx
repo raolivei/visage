@@ -51,6 +51,9 @@ export default function RootLayout({
                   <a href="/packs" className="btn-ghost">
                     My Packs
                   </a>
+                  <a href="/watermark" className="btn-ghost">
+                    Remove Watermarks
+                  </a>
                   <a href="/packs/new" className="btn-primary">
                     New Headshot
                   </a>

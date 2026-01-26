@@ -84,6 +84,24 @@ export interface HealthResponse {
   services: Record<string, string>;
 }
 
+// Watermark removal types
+export interface WatermarkJobResponse {
+  job_id: string;
+  status: string;
+  message: string;
+  input_count: number;
+  input_keys: string[];
+}
+
+export interface WatermarkStatusResponse {
+  job_id: string;
+  status: string;
+  progress: number;
+  output_keys: string[];
+  output_urls: string[];
+  errors: string[];
+}
+
 // ============================================================================
 // API Client
 // ============================================================================
@@ -145,12 +163,20 @@ class ApiClient {
   // Photos
   async uploadPhotos(
     packId: string,
-    files: File[]
+    files: File[],
+    options: { removeWatermarks?: boolean } = {}
   ): Promise<PhotoUploadResponse> {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
 
-    const response = await fetch(`${this.baseUrl}/api/packs/${packId}/photos`, {
+    const params = new URLSearchParams();
+    if (options.removeWatermarks) {
+      params.append("remove_watermarks", "true");
+    }
+
+    const url = `${this.baseUrl}/api/packs/${packId}/photos${params.toString() ? `?${params.toString()}` : ""}`;
+    
+    const response = await fetch(url, {
       method: "POST",
       body: formData,
     });
@@ -224,6 +250,53 @@ class ApiClient {
   // Styles
   async listStyles(): Promise<{ styles: StylePreset[] }> {
     return this.fetch("/api/packs/styles");
+  }
+
+  // =========================================================================
+  // Watermark Removal
+  // =========================================================================
+
+  /**
+   * Upload images and queue watermark removal.
+   */
+  async removeWatermarks(files: File[]): Promise<WatermarkJobResponse> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    const response = await fetch(`${this.baseUrl}/api/watermark/remove`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(
+        error.detail || `Watermark removal failed: ${response.status}`
+      );
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get status of a watermark removal job.
+   */
+  async getWatermarkStatus(jobId: string): Promise<WatermarkStatusResponse> {
+    return this.fetch(`/api/watermark/status/${jobId}`);
+  }
+
+  /**
+   * Get download URL for watermark removal results.
+   */
+  getWatermarkDownloadUrl(jobId: string): string {
+    return `${this.baseUrl}/api/watermark/download/${jobId}`;
+  }
+
+  /**
+   * Delete a watermark removal job and its files.
+   */
+  async deleteWatermarkJob(jobId: string): Promise<void> {
+    await this.fetch(`/api/watermark/job/${jobId}`, { method: "DELETE" });
   }
 }
 

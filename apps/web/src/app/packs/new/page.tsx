@@ -11,6 +11,7 @@ import {
   Loader2,
   ArrowRight,
   Image as ImageIcon,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, StylePreset } from "@/lib/api";
@@ -55,6 +56,7 @@ export default function NewPackPage() {
   const [step, setStep] = useState<"upload" | "style" | "review">("upload");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(["corporate"]);
+  const [removeWatermarks, setRemoveWatermarks] = useState(false);
   const [, setPackId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +129,8 @@ export default function NewPackPage() {
 
       const result = await api.uploadPhotos(
         pack.id,
-        files.map((f) => f.file)
+        files.map((f) => f.file),
+        { removeWatermarks }
       );
 
       // Update file statuses
@@ -244,6 +247,34 @@ export default function NewPackPage() {
                 No group photos
               </li>
             </ul>
+          </div>
+
+          {/* Watermark removal toggle */}
+          <div className="glass-card p-6 mb-6">
+            <label className="flex items-start gap-4 cursor-pointer">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={removeWatermarks}
+                  onChange={(e) => setRemoveWatermarks(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-visage-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-500"></div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-4 h-4 text-accent-400" />
+                  <span className="font-semibold text-visage-100">
+                    Remove Watermarks
+                  </span>
+                </div>
+                <p className="text-sm text-visage-400">
+                  Enable this if your photos are from AI headshot generators and
+                  have watermarks. We&apos;ll automatically detect and remove them
+                  before training.
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Preview grid */}
@@ -442,12 +473,20 @@ export default function NewPackPage() {
             <div className="mt-8 pt-6 border-t border-visage-800">
               <p className="text-visage-400">
                 <strong className="text-visage-100">Estimated time:</strong>{" "}
-                15-30 minutes for training and generation
+                {removeWatermarks ? "20-35" : "15-30"} minutes for{" "}
+                {removeWatermarks && "watermark removal, "}training and
+                generation
               </p>
               <p className="text-visage-400 mt-1">
                 <strong className="text-visage-100">Expected outputs:</strong> ~
                 {selectedStyles.length * 20} images (best 5-10 per style)
               </p>
+              {removeWatermarks && (
+                <p className="text-accent-400 mt-2 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Watermark removal enabled
+                </p>
+              )}
             </div>
           </div>
 
