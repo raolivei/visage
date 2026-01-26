@@ -516,7 +516,7 @@ class SLBRWatermarkRemover:
         
         return (face_x, face_y, face_w, face_h)
     
-    def _apply_face_aware_smoothing(self, image: np.ndarray) -> np.ndarray:
+    def _apply_face_aware_smoothing(self, image: np.ndarray, strength: str = "light") -> np.ndarray:
         """
         Apply smoothing with face region protection.
         
@@ -525,6 +525,7 @@ class SLBRWatermarkRemover:
         
         Args:
             image: BGR image
+            strength: "light", "medium", or "strong"
             
         Returns:
             Smoothed image with face preserved
@@ -541,11 +542,21 @@ class SLBRWatermarkRemover:
         # Blur the mask for soft transitions
         face_mask = cv2.GaussianBlur(face_mask, (51, 51), 0)
         
-        # Apply stronger bilateral filter to the whole image
-        strong_smooth = cv2.bilateralFilter(image, d=9, sigmaColor=50, sigmaSpace=50)
+        # Parameters based on strength
+        if strength == "light":
+            # Very gentle - preserves most detail
+            bg_d, bg_color, bg_space = 5, 20, 20
+            face_d, face_color, face_space = 3, 10, 10
+        elif strength == "medium":
+            bg_d, bg_color, bg_space = 7, 35, 35
+            face_d, face_color, face_space = 5, 15, 15
+        else:  # strong
+            bg_d, bg_color, bg_space = 9, 50, 50
+            face_d, face_color, face_space = 5, 20, 20
         
-        # Apply gentle bilateral filter for face region
-        gentle_smooth = cv2.bilateralFilter(image, d=5, sigmaColor=20, sigmaSpace=20)
+        # Apply bilateral filters
+        strong_smooth = cv2.bilateralFilter(image, d=bg_d, sigmaColor=bg_color, sigmaSpace=bg_space)
+        gentle_smooth = cv2.bilateralFilter(image, d=face_d, sigmaColor=face_color, sigmaSpace=face_space)
         
         # Blend based on face mask
         result = np.zeros_like(image)
@@ -561,55 +572,40 @@ class SLBRWatermarkRemover:
         self, 
         image: np.ndarray,
         process_size: int = 1024,
-        num_passes: int = 3
+        num_passes: int = 2,
+        extra_filters: bool = False
     ) -> np.ndarray:
         """
-        Aggressive watermark removal combining multiple techniques.
+        Aggressive watermark removal - multiple SLBR passes at high resolution.
         
-        This is the highest quality option but slowest (~2-3 minutes on CPU).
-        
-        Pipeline:
-        1. Triple SLBR passes at high resolution
-        2. Directional line filter for diagonal artifacts
-        3. FFT notch filter for periodic patterns
-        4. Banner removal
-        5. Face-aware smoothing
+        Best balance of watermark removal and sharpness preservation.
         
         Args:
             image: BGR image
             process_size: Processing resolution (1024 recommended)
-            num_passes: Number of SLBR passes (3 recommended)
+            num_passes: Number of SLBR passes (2 = good balance, 3 = more removal)
+            extra_filters: If True, apply diagonal line filter and FFT cleanup
+                          (may reduce sharpness, disabled by default)
             
         Returns:
             Cleaned BGR image
         """
-        logger.info(f"Starting aggressive watermark removal ({num_passes} SLBR passes)")
+        logger.info(f"Starting aggressive watermark removal ({num_passes} SLBR passes at {process_size}px)")
         
-        # Step 1: Multiple SLBR passes
-        logger.info(f"Step 1/{5}: Running {num_passes} SLBR passes at {process_size}px")
+        # Run SLBR passes at high resolution
         result = self.remove_watermark(
             image,
             process_size=process_size,
             num_passes=num_passes,
-            remove_banner=False,  # We'll do this later
-            apply_smoothing=False  # We'll use face-aware smoothing instead
+            remove_banner=True,
+            apply_smoothing=False  # Keep sharp
         )
         
-        # Step 2: Remove diagonal line artifacts
-        logger.info("Step 2/5: Removing diagonal line artifacts")
-        result = self._remove_diagonal_lines(result)
-        
-        # Step 3: FFT cleanup for periodic patterns
-        logger.info("Step 3/5: FFT cleanup for periodic patterns")
-        result = self._apply_fft_cleanup(result)
-        
-        # Step 4: Remove bottom banner
-        logger.info("Step 4/5: Removing bottom banner")
-        result = self._remove_bottom_banner(result)
-        
-        # Step 5: Face-aware smoothing
-        logger.info("Step 5/5: Applying face-aware smoothing")
-        result = self._apply_face_aware_smoothing(result)
+        # Optional extra filters (can reduce sharpness)
+        if extra_filters:
+            logger.info("Applying extra filters (diagonal + FFT)")
+            result = self._remove_diagonal_lines(result)
+            result = self._apply_fft_cleanup(result)
         
         logger.info("Aggressive watermark removal complete")
         return result
