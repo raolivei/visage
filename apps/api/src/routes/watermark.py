@@ -4,6 +4,7 @@ Watermark Removal Routes
 Endpoints for removing watermarks from images.
 Provides both standalone tool and integration with pack upload.
 """
+
 from __future__ import annotations
 
 import io
@@ -29,15 +30,17 @@ router = APIRouter(prefix="/watermark", tags=["watermark"])
 
 def sanitize_for_log(value: str) -> str:
     """Sanitize a value for safe logging (prevent log injection)."""
-    return re.sub(r'[\r\n\t]', '', str(value))
+    return re.sub(r"[\r\n\t]", "", str(value))
 
 
 # ============================================================================
 # Schemas
 # ============================================================================
 
+
 class WatermarkJobResponse(BaseModel):
     """Response after queuing watermark removal job."""
+
     job_id: str
     status: str
     message: str
@@ -47,6 +50,7 @@ class WatermarkJobResponse(BaseModel):
 
 class WatermarkStatusResponse(BaseModel):
     """Status of a watermark removal job."""
+
     job_id: str
     status: str  # pending, processing, completed, failed
     progress: int  # 0-100
@@ -57,6 +61,7 @@ class WatermarkStatusResponse(BaseModel):
 
 class WatermarkResultItem(BaseModel):
     """Single watermark removal result."""
+
     original_filename: str
     s3_key: str
     url: str
@@ -66,6 +71,7 @@ class WatermarkResultItem(BaseModel):
 
 class WatermarkRemoveResponse(BaseModel):
     """Response after watermark removal (synchronous)."""
+
     processed: int
     results: list[WatermarkResultItem]
     errors: list[str]
@@ -75,81 +81,97 @@ class WatermarkRemoveResponse(BaseModel):
 # Standalone Watermark Removal
 # ============================================================================
 
+
 @router.post("/remove", response_model=WatermarkJobResponse)
 async def remove_watermarks(
     files: Annotated[list[UploadFile], File(description="Images to process")],
 ) -> WatermarkJobResponse:
     """
     Remove watermarks from uploaded images.
-    
+
     Uploads images to temporary storage and queues a watermark removal job.
     Poll the status endpoint to check progress and get results.
-    
+
     Accepts: JPEG, PNG, WebP (max 20MB each, max 20 files)
     """
     if len(files) > 20:
+        raise HTTPException(status_code=400, detail="Maximum 20 files per request")
+
+    try:
+        storage = get_storage_service()
+        queue = get_queue_service()
+    except Exception as e:
+        logger.exception("Watermark removal: storage or queue unavailable")
         raise HTTPException(
-            status_code=400,
-            detail="Maximum 20 files per request"
-        )
-    
-    storage = get_storage_service()
-    queue = get_queue_service()
-    
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Storage or queue temporarily unavailable. Check API logs.",
+        ) from e
+
     job_id = str(uuid.uuid4())
     input_keys = []
     errors = []
-    
+
     for file in files:
         try:
             # Validate file extension
             ext = Path(file.filename or "").suffix.lower()
             if ext not in settings.allowed_extensions:
-                errors.append(f"{file.filename}: Invalid file type (allowed: jpg, png, webp)")
+                errors.append(
+                    f"{file.filename}: Invalid file type (allowed: jpg, png, webp)"
+                )
                 continue
-            
+
             # Validate file size
             content = await file.read()
             size_mb = len(content) / (1024 * 1024)
             if size_mb > settings.max_upload_size_mb:
-                errors.append(f"{file.filename}: File too large ({size_mb:.1f}MB, max: {settings.max_upload_size_mb}MB)")
+                errors.append(
+                    f"{file.filename}: File too large ({size_mb:.1f}MB, max: {settings.max_upload_size_mb}MB)"
+                )
                 continue
-            
+
             # Generate S3 key for temporary storage
             file_id = uuid.uuid4()
             s3_key = f"watermark-jobs/{job_id}/input/{file_id}{ext}"
-            
+
             # Upload to storage
             storage.upload_bytes(
                 content,
                 s3_key,
                 content_type=file.content_type or "image/jpeg",
             )
-            
+
             input_keys.append(s3_key)
-            
+
         except Exception as e:
-            logger.error("Failed to upload file for watermark removal: %s", type(e).__name__)
+            logger.error(
+                "Failed to upload file for watermark removal: %s", type(e).__name__
+            )
             errors.append(f"{file.filename}: Upload failed")
-    
+
     if not input_keys:
         raise HTTPException(
-            status_code=400,
-            detail=f"No valid files uploaded. Errors: {errors}"
+            status_code=400, detail=f"No valid files uploaded. Errors: {errors}"
         )
-    
+
     # Queue the watermark removal job
-    queue.enqueue_watermark_job(
+    ok = queue.enqueue_watermark_job(
         job_id=job_id,
         input_keys=input_keys,
     )
-    
+    if not ok:
+        logger.error("Failed to enqueue watermark job %s", sanitize_for_log(job_id))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Queue temporarily unavailable. Could not enqueue job.",
+        )
+
     logger.info(
         "Queued watermark removal job %s with %d files",
         sanitize_for_log(job_id),
-        len(input_keys)
+        len(input_keys),
     )
-    
+
     return WatermarkJobResponse(
         job_id=job_id,
         status="pending",
@@ -163,35 +185,71 @@ async def remove_watermarks(
 async def get_watermark_status(job_id: str) -> WatermarkStatusResponse:
     """
     Get status of a watermark removal job.
-    
+
     Poll this endpoint to check progress and retrieve results when complete.
     """
     queue = get_queue_service()
-    storage = get_storage_service()
-    
     # Get job status from Redis
     status_data = queue.get_watermark_job_status(job_id)
-    
+
     if status_data is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    
-    # Generate URLs for completed outputs
-    output_urls = []
-    for key in status_data.get("output_keys", []):
-        try:
-            # Use public URL for direct browser access
-            url = f"http://localhost:9000/{settings.minio_bucket}/{key}"
-            output_urls.append(url)
-        except Exception:
-            pass
-    
+
+    # Use same-origin proxy URLs so images load from visage.eldertree.local (no MinIO exposure needed)
+    output_keys = status_data.get("output_keys", [])
+    output_urls = [
+        f"/api/watermark/result/{job_id}/{i}" for i in range(len(output_keys))
+    ]
+
     return WatermarkStatusResponse(
         job_id=job_id,
         status=status_data.get("status", "unknown"),
         progress=status_data.get("progress", 0),
-        output_keys=status_data.get("output_keys", []),
+        output_keys=output_keys,
         output_urls=output_urls,
         errors=status_data.get("errors", []),
+    )
+
+
+# Content-Type for common image extensions (for result proxy)
+_RESULT_MEDIA_TYPES: dict[str, str] = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+}
+
+
+@router.get("/result/{job_id}/{index}")
+async def get_watermark_result_image(job_id: str, index: int):
+    """
+    Stream a single output image for a completed watermark job (same-origin proxy).
+    Used so result images load in the browser at visage.eldertree.local without exposing MinIO.
+    """
+    queue = get_queue_service()
+    storage = get_storage_service()
+    status_data = queue.get_watermark_job_status(job_id)
+    if status_data is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if status_data.get("status") != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job not complete. Status: {status_data.get('status')}",
+        )
+    output_keys = status_data.get("output_keys", [])
+    if index < 0 or index >= len(output_keys):
+        raise HTTPException(status_code=404, detail="Output index out of range")
+    key = output_keys[index]
+    try:
+        data = storage.download_file(key)
+    except Exception as e:
+        logger.warning("Failed to stream watermark result %s/%s: %s", job_id, index, e)
+        raise HTTPException(status_code=404, detail="Result file not found") from e
+    ext = Path(key).suffix.lower()
+    media_type = _RESULT_MEDIA_TYPES.get(ext, "application/octet-stream")
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type=media_type,
     )
 
 
@@ -202,48 +260,48 @@ async def download_watermark_results(job_id: str):
     """
     queue = get_queue_service()
     storage = get_storage_service()
-    
+
     # Get job status
     status_data = queue.get_watermark_job_status(job_id)
-    
+
     if status_data is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    
+
     if status_data.get("status") != "completed":
         raise HTTPException(
             status_code=400,
-            detail=f"Job not complete. Status: {status_data.get('status')}"
+            detail=f"Job not complete. Status: {status_data.get('status')}",
         )
-    
+
     output_keys = status_data.get("output_keys", [])
-    
+
     if not output_keys:
         raise HTTPException(status_code=404, detail="No output files found")
-    
+
     # Create ZIP in memory
     zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for key in output_keys:
             try:
                 # Download image from MinIO
                 image_data = storage.download_file(key)
-                
+
                 # Use original filename from key
                 filename = Path(key).name
                 zip_file.writestr(filename, image_data)
-                
+
             except Exception as e:
                 logger.warning(f"Failed to add {key} to ZIP: {e}")
-    
+
     zip_buffer.seek(0)
-    
+
     # Return as streaming response
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
         headers={
             "Content-Disposition": f"attachment; filename=watermark-removed-{job_id[:8]}.zip"
-        }
+        },
     )
 
 
@@ -251,19 +309,19 @@ async def download_watermark_results(job_id: str):
 async def delete_watermark_job(job_id: str):
     """
     Delete a watermark removal job and its files.
-    
+
     Cleans up temporary storage and removes job from queue.
     """
     queue = get_queue_service()
     storage = get_storage_service()
-    
+
     # Delete files from storage
     prefix = f"watermark-jobs/{job_id}/"
     files = storage.list_files(prefix=prefix)
     for file in files:
         storage.delete_file(file["Key"])
-    
+
     # Remove job from Redis
     queue.delete_watermark_job(job_id)
-    
+
     logger.info("Deleted watermark job %s", sanitize_for_log(job_id))

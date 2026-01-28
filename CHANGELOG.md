@@ -104,6 +104,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated README with badges and improved structure
 - Worker requirements updated with all ML dependencies
 
+### Fixed
+
+- **Watermark removal result URLs**: Status endpoint now returns same-origin proxy URLs (`/api/watermark/result/{job_id}/{index}`) so result images load in the browser at visage.eldertree.local without exposing MinIO. New GET `/api/watermark/result/{job_id}/{index}` streams the output image.
+- **Watermark removal errors**: Storage/queue failures on `POST /api/watermark/remove` now return 503 with actionable detail instead of 500.
+
 ## [0.1.0] - 2026-01-14
 
 ### Added
