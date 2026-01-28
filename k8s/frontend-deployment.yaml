@@ -45,7 +45,7 @@ spec:
               name: http
           env:
             - name: NEXT_PUBLIC_API_URL
-              value: https://visage.eldertree.local/api
+              value: https://visage.eldertree.local
           resources:
             requests:
               memory: "128Mi"

@@ -4,7 +4,12 @@
  * Type-safe client for the Visage API.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8004";
+// Use relative URLs in browser (same-origin) so it works at visage.eldertree.local;
+// use env or localhost for SSR and local dev
+const API_URL =
+  typeof window !== "undefined"
+    ? ""
+    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8004");
 
 // ============================================================================
 // Types
