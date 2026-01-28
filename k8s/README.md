@@ -5,7 +5,6 @@ Kubernetes manifests for deploying Visage on ElderTree.
 ## Prerequisites
 
 1. **Vault Secrets**: Create the following secrets in Vault:
-
    - `secret/visage/postgres` with `password`
    - `secret/visage/database` with `url` (full PostgreSQL connection string)
    - `secret/visage/minio` with `access-key` and `secret-key`
@@ -61,6 +60,15 @@ kubectl apply -f k8s/frontend-deployment.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
+### Rollout after new API image
+
+After CI pushes a new `ghcr.io/raolivei/visage-api:latest`, switch kubectl to the Eldertree cluster and restart the API so pods pull the new image:
+
+```bash
+kubectl rollout restart deployment/visage-api -n visage
+kubectl rollout status deployment/visage-api -n visage
+```
+
 ## Vault Secret Setup
 
 ```bash
@@ -97,27 +105,22 @@ vault kv put secret/visage/app \
 | visage-redis    | 6379 | Redis job queue      |
 | visage-minio    | 9000 | MinIO object storage |
 
-## Accessing Locally
+## Accessing visage
 
-Services are accessible via the MetalLB VIP (192.168.2.200).
+Use the same path as for all Eldertree services (vault, grafana, swimto, etc.):
 
-**Option 1: Pi-hole (Recommended)**
+1. **Tailscale (primary)** — Follow [pi-fleet TAILSCALE.md → Access all services from your Mac](https://github.com/raolivei/pi-fleet/blob/main/docs/TAILSCALE.md#access-all-services-from-your-mac): enable Tailscale, Accept Routes, add the full `/etc/hosts` block from [eldertree-local-hosts-block.txt](https://github.com/raolivei/pi-fleet/blob/main/docs/eldertree-local-hosts-block.txt) (replacing `TRAEFIK_LB_IP` with the Traefik EXTERNAL-IP).
+2. Open **https://visage.eldertree.local** (accept self-signed cert if prompted).
 
-Configure Pi-hole as your DNS server. It automatically resolves `*.eldertree.local`.
+**Fallback when Tailscale is not available** (e.g. Tailscale down or not set up):
 
-**Option 2: /etc/hosts**
+1. Add to `/etc/hosts`: `127.0.0.1  visage.eldertree.local`
+2. Run `./scripts/visage-tunnel.sh` (kubectl port-forward to Traefik; keeps running).
+3. Open **https://visage.eldertree.local:8443** (accept self-signed cert).
 
-Add to `/etc/hosts`:
+Requires `kubectl` and a kubeconfig that can reach the Eldertree API server.
 
-```
-# ElderTree k8s Cluster VIP (Traefik Ingress)
-192.168.2.200  visage.eldertree.local
-192.168.2.200  grafana.eldertree.local
-192.168.2.200  prometheus.eldertree.local
-192.168.2.200  minio.eldertree.local
-```
-
-Then access: https://visage.eldertree.local
+If another device is on the cluster LAN, it can use the Traefik LB IP in `/etc/hosts` or Pi-hole for `*.eldertree.local`.
 
 ## Network Architecture
 
