@@ -20,6 +20,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 # Production stage
 FROM python:3.11-slim
 
+ARG BUILD_VERSION=0.1.0
+ENV VERSION=${BUILD_VERSION}
+
 WORKDIR /app
 
 # Create non-root user

@@ -5,6 +5,7 @@ System health and status endpoints.
 """
 
 import logging
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, Depends
@@ -21,7 +22,9 @@ router = APIRouter(tags=["health"])
 
 
 def get_version() -> str:
-    """Read version from VERSION file."""
+    """Version from env (set at image build) or VERSION file (local dev)."""
+    if os.environ.get("VERSION"):
+        return os.environ["VERSION"].strip()
     version_file = Path(__file__).parent.parent.parent.parent.parent / "VERSION"
     if version_file.exists():
         return version_file.read_text().strip()

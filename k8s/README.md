@@ -122,6 +122,23 @@ Requires `kubectl` and a kubeconfig that can reach the Eldertree API server.
 
 If another device is on the cluster LAN, it can use the Traefik LB IP in `/etc/hosts` or Pi-hole for `*.eldertree.local`.
 
+**Public domain:** https://visage.eldertree.xyz — HTTPS with Cloudflare Origin Certificate (trusted in browsers). Requires ExternalSecret `visage-cloudflare-origin-cert-eldertree` and Cloudflare DNS + SSL Full (strict).
+
+### Verifying deployment (version and HTTPS)
+
+From a machine that can reach the cluster (e.g. Mac with Tailscale + hosts or LAN):
+
+```bash
+# Version and health (expected version matches repo VERSION file, e.g. 0.1.0)
+curl -sSk https://visage.eldertree.local/health | jq .
+curl -sS  https://visage.eldertree.xyz/health  | jq .
+
+# HTTPS: .local uses cluster CA/self-signed (use -k with curl); .xyz uses Cloudflare Origin Cert (trusted)
+curl -sS -o /dev/null -w "%{http_code}\n" https://visage.eldertree.xyz/
+```
+
+After pushing a new API image, restart the API deployment and re-check `/health` to confirm the new version is served at both hosts.
+
 ## Network Architecture
 
 ```
