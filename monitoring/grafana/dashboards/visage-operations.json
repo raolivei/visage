@@ -116,7 +116,7 @@
                         "type": "prometheus",
                         "uid": "prometheus"
                     },
-                    "expr": "up{job=\"visage-worker\"}",
+                    "expr": "(count(visage_worker_info{job=\"visage-worker\"}) >= 1) or (up{job=\"visage-worker\"} == 1)",
                     "refId": "A"
                 }
             ],

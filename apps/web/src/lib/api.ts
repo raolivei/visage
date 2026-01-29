@@ -9,7 +9,7 @@
 const API_URL =
   typeof window !== "undefined"
     ? ""
-    : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8004");
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8004";
 
 // ============================================================================
 // Types
@@ -120,7 +120,7 @@ class ApiClient {
 
   private async fetch<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -169,7 +169,7 @@ class ApiClient {
   async uploadPhotos(
     packId: string,
     files: File[],
-    options: { removeWatermarks?: boolean } = {}
+    options: { removeWatermarks?: boolean } = {},
   ): Promise<PhotoUploadResponse> {
     const formData = new FormData();
     files.forEach((file) => formData.append("files", file));
@@ -180,7 +180,7 @@ class ApiClient {
     }
 
     const url = `${this.baseUrl}/api/packs/${packId}/photos${params.toString() ? `?${params.toString()}` : ""}`;
-    
+
     const response = await fetch(url, {
       method: "POST",
       body: formData,
@@ -202,7 +202,7 @@ class ApiClient {
   async startGeneration(
     packId: string,
     stylePresets?: string[],
-    numImagesPerStyle = 20
+    numImagesPerStyle = 20,
   ): Promise<{ job: Job; message: string }> {
     return this.fetch(`/api/packs/${packId}/generate`, {
       method: "POST",
@@ -220,17 +220,17 @@ class ApiClient {
   // Outputs
   async listOutputs(
     packId: string,
-    includeFiltered = false
+    includeFiltered = false,
   ): Promise<OutputListResponse> {
     return this.fetch(
-      `/api/packs/${packId}/outputs?include_filtered=${includeFiltered}`
+      `/api/packs/${packId}/outputs?include_filtered=${includeFiltered}`,
     );
   }
 
   async selectOutputs(
     packId: string,
     outputIds: string[],
-    selected = true
+    selected = true,
   ): Promise<{ updated: number }> {
     return this.fetch(`/api/packs/${packId}/outputs/select`, {
       method: "POST",
@@ -240,7 +240,7 @@ class ApiClient {
 
   async getOutputUrl(
     packId: string,
-    outputId: string
+    outputId: string,
   ): Promise<{ url: string; expires_in: number }> {
     return this.fetch(`/api/packs/${packId}/outputs/${outputId}/url`);
   }
@@ -276,7 +276,7 @@ class ApiClient {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(
-        error.detail || `Watermark removal failed: ${response.status}`
+        error.detail || `Watermark removal failed: ${response.status}`,
       );
     }
 

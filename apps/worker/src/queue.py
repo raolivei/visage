@@ -23,6 +23,10 @@ class QueueClient:
     QUEUE_PREFIX = "visage:jobs"
     PENDING_QUEUE = f"{QUEUE_PREFIX}:pending"
     PROCESSING_SET = f"{QUEUE_PREFIX}:processing"
+    
+    # Watermark removal queue
+    WATERMARK_PREFIX = "visage:watermark"
+    WATERMARK_QUEUE = f"{WATERMARK_PREFIX}:pending"
 
     def __init__(self):
         """Initialize Redis connection."""
@@ -252,6 +256,101 @@ class QueueClient:
             return True
         except redis.RedisError:
             return False
+
+    # =========================================================================
+    # Watermark Removal Queue Methods
+    # =========================================================================
+
+    def dequeue_watermark_job(self) -> dict[str, Any] | None:
+        """
+        Get the next watermark removal job from the queue.
+        
+        Returns:
+            Job data dict or None if queue is empty
+        """
+        try:
+            # Pop from queue (non-blocking)
+            result = self.redis.lpop(self.WATERMARK_QUEUE)
+            
+            if not result:
+                return None
+            
+            job_id = result
+            job_key = f"{self.WATERMARK_PREFIX}:{job_id}:data"
+            
+            # Get job data
+            job_data = self.redis.hgetall(job_key)
+            
+            if not job_data:
+                logger.warning(f"Watermark job {job_id} not found in data store")
+                return None
+            
+            # Mark as processing
+            self.redis.hset(job_key, "status", "processing")
+            
+            # Parse JSON fields
+            job_data["input_keys"] = json.loads(job_data.get("input_keys", "[]"))
+            job_data["output_keys"] = json.loads(job_data.get("output_keys", "[]"))
+            job_data["errors"] = json.loads(job_data.get("errors", "[]"))
+            
+            logger.info(f"Dequeued watermark job {job_id}")
+            return job_data
+            
+        except redis.RedisError as e:
+            logger.error(f"Failed to dequeue watermark job: {e}")
+            return None
+
+    def update_watermark_job(
+        self,
+        job_id: str,
+        status: str | None = None,
+        progress: int | None = None,
+        output_keys: list[str] | None = None,
+        errors: list[str] | None = None,
+    ) -> bool:
+        """
+        Update watermark job status.
+        
+        Args:
+            job_id: Job identifier
+            status: New status (pending, processing, completed, failed)
+            progress: Progress percentage (0-100)
+            output_keys: List of output S3 keys
+            errors: List of error messages
+            
+        Returns:
+            True if updated successfully
+        """
+        try:
+            job_key = f"{self.WATERMARK_PREFIX}:{job_id}:data"
+            
+            updates = {}
+            if status is not None:
+                updates["status"] = status
+            if progress is not None:
+                updates["progress"] = str(progress)
+            if output_keys is not None:
+                updates["output_keys"] = json.dumps(output_keys)
+            if errors is not None:
+                updates["errors"] = json.dumps(errors)
+            if status in ("completed", "failed"):
+                updates["completed_at"] = datetime.utcnow().isoformat()
+            
+            if updates:
+                self.redis.hset(job_key, mapping=updates)
+            
+            return True
+            
+        except redis.RedisError as e:
+            logger.error(f"Failed to update watermark job: {e}")
+            return False
+
+    def get_watermark_queue_length(self) -> int:
+        """Get number of pending watermark jobs."""
+        try:
+            return self.redis.llen(self.WATERMARK_QUEUE)
+        except redis.RedisError:
+            return 0
 
 
 # Singleton

@@ -7,7 +7,7 @@ Uploaded user photos for LoRA training.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
@@ -35,6 +35,11 @@ class Photo(Base):
     original_filename = Column(String(255), nullable=False)
     content_type = Column(String(100), nullable=True)
     file_size = Column(Float, nullable=True)  # In bytes
+    
+    # Watermark removal
+    watermark_removed = Column(Boolean, default=False)  # True if watermark was removed
+    original_s3_key = Column(Text, nullable=True)  # Original file key (before watermark removal)
+    watermark_job_id = Column(String(36), nullable=True)  # Associated watermark removal job
     
     # Validation results
     quality_score = Column(Float, nullable=True)  # 0.0 to 1.0

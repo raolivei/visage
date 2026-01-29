@@ -21,6 +21,7 @@ namespace: visage
 resources:
   - namespace.yaml
   # - externalsecrets.yaml  # Disabled - using K8s secrets directly
+  - cloudflare-origin-cert-eldertree-xyz-external.yaml
   - minio-deployment.yaml
   - postgres-pvc.yaml
   - postgres-deployment.yaml # Standalone - replace with postgres-cluster.yaml for HA

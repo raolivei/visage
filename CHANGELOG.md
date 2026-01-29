@@ -44,7 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Commercial Quality Pipeline
 
 - **Photo Validator** (`apps/worker/src/pipeline/validator.py`)
-
   - Face detection using InsightFace/RetinaFace
   - Quality checks: resolution, blur, exposure
   - Face preprocessing with alignment
@@ -52,7 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Pose diversity checking
 
 - **Quality Filter** (`apps/worker/src/pipeline/filter.py`)
-
   - Multi-factor scoring (face similarity, aesthetic, technical, artifacts)
   - ArcFace face embeddings for similarity scoring
   - CLIP-based aesthetic scoring
@@ -60,14 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configurable thresholds and weights
 
 - **Post-Processor** (`apps/worker/src/pipeline/postprocess.py`)
-
   - Face restoration with CodeFormer/GFPGAN
   - Upscaling with Real-ESRGAN (2x)
   - Auto color correction
   - Sharpening pipeline
 
 - **Real LoRA Training** (`apps/worker/src/pipeline/trainer.py`)
-
   - PEFT-based LoRA training for SDXL
   - Auto-captioning for training images
   - Configurable hyperparameters

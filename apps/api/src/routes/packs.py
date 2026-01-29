@@ -253,6 +253,7 @@ async def upload_photos(
     pack_id: uuid.UUID,
     files: Annotated[list[UploadFile], File(description="Photos to upload")],
     db: AsyncSession = Depends(get_db),
+    remove_watermarks: bool = False,
 ) -> PhotoUploadResponse:
     """
     Upload photos to a pack.
@@ -261,6 +262,9 @@ async def upload_photos(
     - File type (JPEG, PNG, WebP)
     - File size (max 20MB)
     - Face detection (done asynchronously)
+    
+    If remove_watermarks=true, photos will be processed to remove
+    watermarks before being used for training.
     """
     # Get pack
     result = await db.execute(select(Pack).where(Pack.id == pack_id))
@@ -284,6 +288,8 @@ async def upload_photos(
     storage = get_storage_service()
     uploaded_photos = []
     errors = []
+    watermark_input_keys = []  # Keys to process for watermark removal
+    watermark_job_id = None
     
     for file in files:
         try:
@@ -304,7 +310,18 @@ async def upload_photos(
             photo_id = uuid.uuid4()
             s3_key = f"packs/{pack_id}/photos/{photo_id}{ext}"
             
-            # Upload to storage
+            # If watermark removal requested, store original separately
+            original_s3_key = None
+            if remove_watermarks:
+                original_s3_key = f"packs/{pack_id}/photos/originals/{photo_id}{ext}"
+                storage.upload_bytes(
+                    content,
+                    original_s3_key,
+                    content_type=file.content_type or "image/jpeg",
+                )
+                watermark_input_keys.append(original_s3_key)
+            
+            # Upload to main location (will be replaced after watermark removal)
             storage.upload_bytes(
                 content,
                 s3_key,
@@ -319,6 +336,8 @@ async def upload_photos(
                 original_filename=file.filename or "unknown",
                 content_type=file.content_type,
                 file_size=len(content),
+                watermark_removed=False,
+                original_s3_key=original_s3_key,
             )
             db.add(photo)
             uploaded_photos.append(photo)
@@ -326,6 +345,29 @@ async def upload_photos(
         except Exception as e:
             logger.error("Failed to upload file: %s", type(e).__name__)
             errors.append(f"{file.filename}: Upload failed")
+    
+    # Queue watermark removal if requested
+    if remove_watermarks and watermark_input_keys:
+        queue = get_queue_service()
+        watermark_job_id = str(uuid.uuid4())
+        
+        queue.enqueue_watermark_job(
+            job_id=watermark_job_id,
+            input_keys=watermark_input_keys,
+            pack_id=str(pack_id),
+        )
+        
+        # Update photos with job ID
+        for photo in uploaded_photos:
+            if photo.original_s3_key:
+                photo.watermark_job_id = watermark_job_id
+        
+        logger.info(
+            "Queued watermark removal for pack %s, job %s with %d files",
+            sanitize_for_log(str(pack_id)),
+            sanitize_for_log(watermark_job_id),
+            len(watermark_input_keys)
+        )
     
     # Update pack status
     if uploaded_photos:
@@ -341,7 +383,9 @@ async def upload_photos(
             quality_score=p.quality_score,
             is_valid=p.is_valid,
             face_detected=p.face_detected,
+            watermark_removed=p.watermark_removed,
             created_at=p.created_at,
+            url=f"http://localhost:9000/{settings.minio_bucket}/{p.s3_key}" if p.s3_key else "",
         )
         for p in uploaded_photos
     ]
@@ -350,6 +394,7 @@ async def upload_photos(
         uploaded=len(uploaded_photos),
         photos=photo_responses,
         errors=errors,
+        watermark_job_id=watermark_job_id,
     )
 
 
@@ -378,6 +423,7 @@ async def list_photos(
                 quality_score=p.quality_score,
                 is_valid=p.is_valid,
                 face_detected=p.face_detected,
+                watermark_removed=p.watermark_removed,
                 created_at=p.created_at,
                 url=url,
             )

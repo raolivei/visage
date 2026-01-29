@@ -27,10 +27,14 @@ echo "  → Redis (6379)..."
 kubectl port-forward -n visage svc/visage-redis 6379:6379 > /tmp/pf-redis.log 2>&1 &
 echo $! > /tmp/pf-redis.pid
 
-# Start Pushgateway port-forward  
-echo "  → Pushgateway (9091)..."
-kubectl port-forward -n observability svc/observability-monitoring-stack-prometheus-pushgateway 9091:9091 > /tmp/pf-pushgateway.log 2>&1 &
-echo $! > /tmp/pf-pushgateway.pid
+# Start Pushgateway port-forward (optional - skip if observability not installed)
+if kubectl get svc -n observability observability-monitoring-stack-prometheus-pushgateway &>/dev/null; then
+  echo "  → Pushgateway (9091)..."
+  kubectl port-forward -n observability svc/observability-monitoring-stack-prometheus-pushgateway 9091:9091 > /tmp/pf-pushgateway.log 2>&1 &
+  echo $! > /tmp/pf-pushgateway.pid
+else
+  echo "  → Pushgateway: skipped (not installed)"
+fi
 
 # Wait for port-forwards to establish
 sleep 3
@@ -39,7 +43,7 @@ sleep 3
 echo ""
 echo "🔍 Verifying connections..."
 redis-cli -p 6379 ping > /dev/null 2>&1 && echo "  ✅ Redis: Connected" || echo "  ❌ Redis: Failed"
-curl -s http://localhost:9091/metrics > /dev/null 2>&1 && echo "  ✅ Pushgateway: Connected" || echo "  ❌ Pushgateway: Failed"
+curl -s http://localhost:9091/metrics > /dev/null 2>&1 && echo "  ✅ Pushgateway: Connected" || echo "  ⏭ Pushgateway: skipped"
 
 # Copy production config
 echo ""

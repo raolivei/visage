@@ -236,6 +236,7 @@ class QualityFilter:
     def _compute_clip_aesthetic(self, image: Image.Image) -> float:
         """Compute aesthetic score using CLIP."""
         import torch
+        import clip
         
         # Preprocess image
         image_input = self.clip_preprocess(image).unsqueeze(0).to(self.clip_device)
@@ -260,10 +261,10 @@ class QualityFilter:
             image_features = self.clip_model.encode_image(image_input)
             image_features = image_features / image_features.norm(dim=-1, keepdim=True)
             
-            # Get text features for positive prompts
+            # Get text features for positive prompts (clip.tokenize is module-level)
             pos_tokens = torch.cat([
                 self.clip_model.encode_text(
-                    torch.tensor(self.clip_model.tokenize([p])).to(self.clip_device)
+                    clip.tokenize([p]).to(self.clip_device)
                 ) for p in positive_prompts
             ])
             pos_features = pos_tokens / pos_tokens.norm(dim=-1, keepdim=True)
@@ -271,7 +272,7 @@ class QualityFilter:
             # Get text features for negative prompts
             neg_tokens = torch.cat([
                 self.clip_model.encode_text(
-                    torch.tensor(self.clip_model.tokenize([p])).to(self.clip_device)
+                    clip.tokenize([p]).to(self.clip_device)
                 ) for p in negative_prompts
             ])
             neg_features = neg_tokens / neg_tokens.norm(dim=-1, keepdim=True)

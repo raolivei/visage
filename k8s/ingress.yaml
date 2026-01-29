@@ -8,11 +8,11 @@ metadata:
     app.kubernetes.io/name: visage
     app.kubernetes.io/part-of: visage
   annotations:
-    kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
     cert-manager.io/cluster-issuer: ca-cluster-issuer
+    external-dns.alpha.kubernetes.io/hostname: visage.eldertree.local
 spec:
+  ingressClassName: traefik
   tls:
     - hosts:
         - visage.eldertree.local
@@ -21,7 +21,7 @@ spec:
     - host: visage.eldertree.local
       http:
         paths:
-          # API routes
+          # API routes (more specific first)
           - path: /api
             pathType: Prefix
             backend:
@@ -50,7 +50,66 @@ spec:
                 name: visage-api
                 port:
                   number: 8000
-          # Frontend routes (catch-all)
+          # Frontend (catch-all last)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-web
+                port:
+                  number: 3000
+---
+# Public domain (visage.eldertree.xyz) - HTTPS with Cloudflare Origin Certificate
+# Requires: ExternalSecret visage-cloudflare-origin-cert-eldertree synced; Cloudflare SSL Full (strict); DNS
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: visage-ingress-public
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: visage
+    app.kubernetes.io/part-of: visage
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    external-dns.alpha.kubernetes.io/hostname: visage.eldertree.xyz
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - visage.eldertree.xyz
+      secretName: visage-cloudflare-origin-tls
+  rules:
+    - host: visage.eldertree.xyz
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
+          - path: /redoc
+            pathType: Prefix
+            backend:
+              service:
+                name: visage-api
+                port:
+                  number: 8000
           - path: /
             pathType: Prefix
             backend:

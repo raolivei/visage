@@ -37,7 +37,7 @@ class TrainingConfig:
     lr_scheduler: str = "constant"
     train_batch_size: int = 1
     gradient_accumulation_steps: int = 4
-    max_train_steps: int = 1500
+    max_train_steps: int = 100  # Reduced from 1500 for faster iteration
     
     # LoRA configuration
     lora_rank: int = 32

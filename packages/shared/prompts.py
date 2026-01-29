@@ -15,7 +15,7 @@ from typing import Optional
 
 STYLE_PRESETS = {
     # -------------------------------------------------------------------------
-    # Business / Corporate Styles
+    # Business / Corporate Styles (Commercial Quality)
     # -------------------------------------------------------------------------
     "corporate": {
         "name": "Corporate / LinkedIn",
@@ -24,38 +24,46 @@ STYLE_PRESETS = {
         "variations": [
             {
                 "prompt": (
-                    "professional corporate headshot portrait of {trigger}, "
-                    "wearing business attire, neutral gray background, "
-                    "soft studio lighting, sharp focus on face, "
-                    "confident expression, high resolution, "
-                    "LinkedIn profile photo style, clean and polished"
+                    "professional headshot portrait photo of {trigger}, "
+                    "wearing navy blue sweater over white collared shirt, "
+                    "outdoors on tree-lined street, soft natural daylight, "
+                    "beautiful green bokeh background, "
+                    "warm natural skin tones, subtle smile, looking at camera, "
+                    "shallow depth of field, 85mm lens, f/1.8 aperture, "
+                    "professional photography, photorealistic, 8k uhd"
                 ),
             },
             {
                 "prompt": (
-                    "professional business portrait of {trigger}, "
-                    "corporate attire, clean white background, "
-                    "even lighting, looking directly at camera, "
-                    "professional and trustworthy expression, "
-                    "high quality corporate headshot"
+                    "professional business headshot of {trigger}, "
+                    "wearing teal plaid button-up shirt, "
+                    "modern bright office with warm pendant lights, "
+                    "soft diffused lighting, friendly genuine smile, "
+                    "blurred office background with bokeh lights, "
+                    "natural skin texture, eye-level angle, "
+                    "Canon EOS R5, 85mm portrait lens, f/2.0, "
+                    "commercial headshot photography, photorealistic"
                 ),
             },
             {
                 "prompt": (
-                    "business headshot of {trigger}, "
-                    "professional formal wear, studio setting, "
-                    "balanced lighting, confident and approachable, "
-                    "sharp focus, corporate profile photo style, "
-                    "clean composition"
+                    "corporate profile photo of {trigger}, "
+                    "smart casual attire, polo shirt, "
+                    "outdoor urban setting with soft natural light, "
+                    "pleasant neutral expression, approachable and confident, "
+                    "creamy background bokeh, professional color grading, "
+                    "high-end portrait photography, Sony A7R IV, "
+                    "85mm f/1.4 GM lens, photorealistic, 8k"
                 ),
             },
         ],
         "negative_prompt": (
-            "cartoon, anime, illustration, painting, drawing, "
-            "blurry, low quality, distorted face, extra limbs, "
-            "bad anatomy, text, watermark, logo, "
-            "casual clothing, outdoor, busy background, "
-            "harsh shadows, unflattering angles"
+            "cartoon, anime, illustration, painting, drawing, cgi, 3d render, "
+            "blurry, low quality, distorted face, extra limbs, bad anatomy, "
+            "text, watermark, logo, signature, frame, border, "
+            "harsh shadows, overexposed, underexposed, "
+            "plastic skin, airbrushed, uncanny valley, "
+            "bad teeth, crossed eyes, asymmetric face"
         ),
     },
     

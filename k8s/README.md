@@ -114,7 +114,7 @@ Use the same path as for all Eldertree services (vault, grafana, swimto, etc.):
 
 **Fallback when Tailscale is not available** (e.g. Tailscale down or not set up):
 
-1. Add to `/etc/hosts`: `127.0.0.1  visage.eldertree.local`
+1. Add to `/etc/hosts`: `127.0.0.1  visage.eldertree.local` (tunnel mode only; for direct access use the same Traefik IP as other services, e.g. `192.168.2.200  visage.eldertree.local`).
 2. Run `./scripts/visage-tunnel.sh` (kubectl port-forward to Traefik; keeps running).
 3. Open **https://visage.eldertree.local:8443** (accept self-signed cert).
 

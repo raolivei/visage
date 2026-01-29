@@ -68,7 +68,7 @@ spec:
             - name: MINIO_SECURE
               value: "false"
             - name: CORS_ORIGINS
-              value: '["https://visage.eldertree.local", "http://localhost:3004"]'
+              value: '["https://visage.eldertree.local", "https://visage.eldertree.xyz", "http://localhost:3004"]'
           resources:
             requests:
               memory: "256Mi"

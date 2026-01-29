@@ -19,7 +19,7 @@ from rich.logging import RichHandler
 from .config import get_settings, get_device
 from .queue import get_queue_client
 from .storage import get_storage_client
-from .pipeline import LoRATrainer, ImageGenerator, QualityFilter
+from .pipeline import LoRATrainer, ImageGenerator, QualityFilter, WatermarkRemover
 from .metrics import (
     start_metrics_server,
     update_job_status,
@@ -453,6 +453,102 @@ def process_generate_job(job: dict, queue, storage) -> dict:
             raise
 
 
+def process_watermark_job(job: dict, queue, storage) -> dict:
+    """
+    Process a watermark removal job.
+    
+    1. Download images from input keys
+    2. Remove watermarks using LaMa inpainting
+    3. Upload cleaned images
+    4. Update job status with output keys
+    """
+    job_id = job["id"]
+    input_keys = job.get("input_keys", [])
+    pack_id = job.get("pack_id", "")
+    
+    logger.info(f"Processing watermark job {job_id} with {len(input_keys)} images")
+    
+    output_keys = []
+    errors = []
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+        
+        # Initialize watermark remover
+        remover = WatermarkRemover()
+        
+        try:
+            total = len(input_keys)
+            
+            for i, input_key in enumerate(input_keys):
+                try:
+                    # Update progress
+                    progress = int((i / total) * 100)
+                    queue.update_watermark_job(job_id, progress=progress)
+                    
+                    # Download image
+                    local_path = tmpdir / f"input_{i}{Path(input_key).suffix}"
+                    storage.download_file(input_key, local_path)
+                    
+                    # Remove watermark
+                    result = remover.remove(local_path)
+                    
+                    # Generate output key
+                    if pack_id:
+                        # For pack integration, replace the original
+                        output_key = input_key.replace("/originals/", "/")
+                    else:
+                        # For standalone, save to output directory
+                        output_key = input_key.replace("/input/", "/output/")
+                    
+                    # Upload cleaned image
+                    buf = io.BytesIO()
+                    result.cleaned_image.save(buf, format="PNG", quality=95)
+                    buf.seek(0)
+                    storage.upload_bytes(buf.read(), output_key)
+                    
+                    output_keys.append(output_key)
+                    
+                    logger.info(
+                        f"Processed {i+1}/{total}: watermark_detected={result.watermark_detected}, "
+                        f"confidence={result.confidence:.2f}"
+                    )
+                    
+                except Exception as e:
+                    error_msg = f"Failed to process {input_key}: {str(e)}"
+                    logger.error(error_msg)
+                    errors.append(error_msg)
+            
+            # Cleanup
+            remover.cleanup()
+            
+            # Update job status
+            queue.update_watermark_job(
+                job_id,
+                status="completed",
+                progress=100,
+                output_keys=output_keys,
+                errors=errors,
+            )
+            
+            logger.info(f"Watermark job {job_id} completed: {len(output_keys)} processed, {len(errors)} errors")
+            
+            return {
+                "processed": len(output_keys),
+                "errors": len(errors),
+                "output_keys": output_keys,
+            }
+            
+        except Exception as e:
+            logger.error(f"Watermark job {job_id} failed: {e}")
+            queue.update_watermark_job(
+                job_id,
+                status="failed",
+                errors=errors + [str(e)],
+            )
+            raise
+
+
 def process_job(job: dict, queue, storage) -> dict | None:
     """
     Process a job based on its type.
@@ -505,7 +601,18 @@ def main():
     
     while not shutdown_requested:
         try:
-            # Poll for jobs
+            # First check for watermark jobs (higher priority, quick processing)
+            watermark_job = queue.dequeue_watermark_job()
+            if watermark_job:
+                job_id = watermark_job["id"]
+                logger.info(f"Processing watermark job {job_id}")
+                try:
+                    process_watermark_job(watermark_job, queue, storage)
+                except Exception as e:
+                    logger.error(f"Watermark job {job_id} failed: {e}")
+                continue  # Check for more watermark jobs before other jobs
+            
+            # Poll for regular jobs
             job = queue.dequeue()
             
             if job is None:

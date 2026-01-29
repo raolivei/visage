@@ -100,13 +100,13 @@ export default function WatermarkPage() {
               ...f,
               status: "completed" as const,
               cleanedUrl: status.output_urls[i] || undefined,
-            }))
+            })),
           );
         } else if (status.status === "failed") {
           setIsProcessing(false);
           setError("Watermark removal failed. Please try again.");
           setFiles((prev) =>
-            prev.map((f) => ({ ...f, status: "error" as const }))
+            prev.map((f) => ({ ...f, status: "error" as const })),
           );
         }
       } catch (err) {
@@ -130,7 +130,7 @@ export default function WatermarkPage() {
 
       // Update file statuses
       setFiles((prev) =>
-        prev.map((f) => ({ ...f, status: "uploading" as const }))
+        prev.map((f) => ({ ...f, status: "uploading" as const })),
       );
 
       // Upload and queue processing
@@ -138,7 +138,7 @@ export default function WatermarkPage() {
       setJobId(result.job_id);
 
       setFiles((prev) =>
-        prev.map((f) => ({ ...f, status: "processing" as const }))
+        prev.map((f) => ({ ...f, status: "processing" as const })),
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to process images");
@@ -163,7 +163,7 @@ export default function WatermarkPage() {
         JSON.stringify({
           job_id: jobId,
           output_urls: jobStatus.output_urls,
-        })
+        }),
       );
       router.push("/packs/new");
     }
@@ -195,7 +195,7 @@ export default function WatermarkPage() {
           className={cn(
             "dropzone mb-6",
             isDragActive && "active",
-            isProcessing && "pointer-events-none opacity-50"
+            isProcessing && "pointer-events-none opacity-50",
           )}
         >
           <input {...getInputProps()} disabled={isProcessing} />
@@ -242,8 +242,8 @@ export default function WatermarkPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-visage-100">
-              {isComplete ? "Cleaned Images" : "Selected Images"} ({files.length}
-              )
+              {isComplete ? "Cleaned Images" : "Selected Images"} (
+              {files.length})
             </h3>
             {!isProcessing && (
               <button
@@ -340,7 +340,7 @@ export default function WatermarkPage() {
             className={cn(
               "btn-primary",
               (isProcessing || files.length === 0) &&
-                "opacity-50 cursor-not-allowed"
+                "opacity-50 cursor-not-allowed",
             )}
           >
             {isProcessing ? (

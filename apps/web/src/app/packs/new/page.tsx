@@ -98,7 +98,7 @@ export default function NewPackPage() {
     setSelectedStyles((prev) =>
       prev.includes(styleId)
         ? prev.filter((s) => s !== styleId)
-        : [...prev, styleId]
+        : [...prev, styleId],
     );
   };
 
@@ -124,13 +124,13 @@ export default function NewPackPage() {
 
       // Upload photos
       setFiles((prev) =>
-        prev.map((f) => ({ ...f, status: "uploading" as const }))
+        prev.map((f) => ({ ...f, status: "uploading" as const })),
       );
 
       const result = await api.uploadPhotos(
         pack.id,
         files.map((f) => f.file),
-        { removeWatermarks }
+        { removeWatermarks },
       );
 
       // Update file statuses
@@ -141,7 +141,7 @@ export default function NewPackPage() {
             ? ("error" as const)
             : ("uploaded" as const),
           error: result.errors.find((e) => e.includes(f.file.name)),
-        }))
+        })),
       );
 
       if (result.uploaded > 0) {
@@ -169,7 +169,7 @@ export default function NewPackPage() {
                   ? "bg-accent-500 text-visage-950"
                   : ["upload", "style", "review"].indexOf(step) > i
                     ? "bg-accent-500/20 text-accent-400"
-                    : "bg-visage-800 text-visage-500"
+                    : "bg-visage-800 text-visage-500",
               )}
             >
               {i + 1}
@@ -180,7 +180,7 @@ export default function NewPackPage() {
                   "w-24 h-0.5 mx-2",
                   ["upload", "style", "review"].indexOf(step) > i
                     ? "bg-accent-500"
-                    : "bg-visage-800"
+                    : "bg-visage-800",
                 )}
               />
             )}
@@ -270,8 +270,8 @@ export default function NewPackPage() {
                 </div>
                 <p className="text-sm text-visage-400">
                   Enable this if your photos are from AI headshot generators and
-                  have watermarks. We&apos;ll automatically detect and remove them
-                  before training.
+                  have watermarks. We&apos;ll automatically detect and remove
+                  them before training.
                 </p>
               </div>
             </label>
@@ -329,7 +329,7 @@ export default function NewPackPage() {
               disabled={files.length < 8}
               className={cn(
                 "btn-primary",
-                files.length < 8 && "opacity-50 cursor-not-allowed"
+                files.length < 8 && "opacity-50 cursor-not-allowed",
               )}
             >
               Continue to Styles
@@ -359,7 +359,7 @@ export default function NewPackPage() {
                   "glass-card p-6 text-left transition-all",
                   selectedStyles.includes(style.id)
                     ? "border-accent-500 bg-accent-500/10"
-                    : "hover:border-visage-600"
+                    : "hover:border-visage-600",
                 )}
               >
                 <div className="flex items-start justify-between">
@@ -376,7 +376,7 @@ export default function NewPackPage() {
                       "w-6 h-6 rounded-full border-2 flex items-center justify-center",
                       selectedStyles.includes(style.id)
                         ? "border-accent-500 bg-accent-500"
-                        : "border-visage-600"
+                        : "border-visage-600",
                     )}
                   >
                     {selectedStyles.includes(style.id) && (
@@ -398,7 +398,7 @@ export default function NewPackPage() {
               disabled={selectedStyles.length === 0}
               className={cn(
                 "btn-primary",
-                selectedStyles.length === 0 && "opacity-50 cursor-not-allowed"
+                selectedStyles.length === 0 && "opacity-50 cursor-not-allowed",
               )}
             >
               Review & Create

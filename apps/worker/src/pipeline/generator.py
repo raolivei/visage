@@ -70,6 +70,8 @@ class ImageGenerator:
         """
         Load LoRA weights into the pipeline.
         
+        Handles PEFT-format LoRA files by converting key names to diffusers format.
+        
         Args:
             lora_path: Path to LoRA weights file
             
@@ -87,17 +89,63 @@ class ImageGenerator:
         try:
             logger.info(f"Loading LoRA from {lora_path}")
             
-            # NOTE: Stub implementation
-            # In production:
-            # self.pipe.load_lora_weights(lora_path)
-            # self.pipe.fuse_lora()
+            # Load and convert PEFT format to diffusers format
+            from safetensors.torch import load_file, save_file
+            import tempfile
+            import os
+            
+            state_dict = load_file(str(lora_path))
+            
+            # Check if this is PEFT format (keys start with 'base_model.model.')
+            sample_key = next(iter(state_dict.keys()))
+            if sample_key.startswith("base_model.model."):
+                logger.info("Converting PEFT format to diffusers format...")
+                
+                # Convert PEFT keys to diffusers format
+                # PEFT: base_model.model.down_blocks.0.attentions.0...
+                # Diffusers: unet.down_blocks.0.attentions.0...
+                converted_dict = {}
+                for key, value in state_dict.items():
+                    # Remove 'base_model.model.' prefix and add 'unet.' prefix
+                    new_key = key.replace("base_model.model.", "unet.")
+                    converted_dict[new_key] = value
+                
+                # Save converted weights to temp file
+                with tempfile.NamedTemporaryFile(
+                    suffix=".safetensors", delete=False
+                ) as tmp:
+                    save_file(converted_dict, tmp.name)
+                    converted_path = Path(tmp.name)
+                
+                logger.info(f"Converted {len(converted_dict)} keys to diffusers format")
+                
+                # Load from converted file
+                self.pipe.load_lora_weights(
+                    str(converted_path.parent),
+                    weight_name=converted_path.name,
+                )
+                
+                # Clean up temp file
+                os.unlink(converted_path)
+            else:
+                # Already in diffusers format
+                self.pipe.load_lora_weights(
+                    str(lora_path.parent),
+                    weight_name=lora_path.name,
+                )
+            
+            # Set LoRA scale (0.7-0.8 is usually a good balance)
+            # Don't fuse - keep LoRA separate for better stability
+            self.pipe.set_adapters(["default"], adapter_weights=[0.8])
             
             self.current_lora = lora_path_str
-            logger.info("LoRA loaded successfully")
+            logger.info(f"✅ LoRA loaded with scale 0.8 from {lora_path}")
             return True
             
         except Exception as e:
             logger.error(f"Failed to load LoRA: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def generate(

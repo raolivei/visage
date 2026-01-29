@@ -1,0 +1,30 @@
+# ExternalSecret for eldertree.xyz Cloudflare Origin Certificate (visage.eldertree.xyz)
+# Same cert as swimto.eldertree.xyz (*.eldertree.xyz). Requires Vault path from Terraform.
+# Prerequisites: certificate at secret/swimto/cloudflare-origin-cert-eldertree (see pi-fleet terraform)
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: visage-cloudflare-origin-cert-eldertree
+  namespace: visage
+spec:
+  refreshInterval: 24h
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  target:
+    name: visage-cloudflare-origin-tls
+    creationPolicy: Owner
+    template:
+      type: kubernetes.io/tls
+      data:
+        tls.crt: "{{ .certificate }}"
+        tls.key: "{{ .privatekey }}"
+  data:
+    - secretKey: certificate
+      remoteRef:
+        key: secret/swimto/cloudflare-origin-cert-eldertree
+        property: certificate
+    - secretKey: privatekey
+      remoteRef:
+        key: secret/swimto/cloudflare-origin-cert-eldertree
+        property: private-key

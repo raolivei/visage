@@ -121,7 +121,7 @@ jobs:
           exit-code: "0"
           # Image is built for linux/arm64 only; Trivy on amd64 runner must scan that platform
           trivy-options: "--platform linux/arm64"
-        continue-on-error: true  # Do not fail job if scan fails (e.g. platform option unsupported)
+        continue-on-error: true # Do not fail job if scan fails (e.g. platform option unsupported)
 
       - name: Upload Trivy results to GitHub Security
         if: github.event_name != 'pull_request' && steps.build.outcome == 'success'
