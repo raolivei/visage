@@ -36,6 +36,8 @@ from src.schemas import (
     OutputBatchCreateRequest,
     OutputBatchCreateResponse,
     OutputListResponse,
+    OutputRatingRequest,
+    OutputRatingResponse,
     OutputResponse,
     OutputSelectRequest,
     PackCreate,
@@ -635,7 +637,6 @@ async def list_outputs(
     # Generate direct URLs (bucket is public)
     output_responses = []
     for o in outputs:
-        # Direct URL to MinIO (bucket is public for anonymous download)
         url = f"http://localhost:9000/{settings.minio_bucket}/{o.s3_key}" if o.s3_key else ""
         output_responses.append(
             OutputResponse(
@@ -644,17 +645,24 @@ async def list_outputs(
                 style_preset=o.style_preset,
                 score=o.score,
                 is_selected=o.is_selected,
+                user_rating=o.user_rating,
+                rating_reason=o.rating_reason,
+                rated_at=o.rated_at,
                 created_at=o.created_at,
                 url=url,
             )
         )
     
     selected_count = sum(1 for o in outputs if o.is_selected)
+    liked_count = sum(1 for o in outputs if o.user_rating is True)
+    disliked_count = sum(1 for o in outputs if o.user_rating is False)
     
     return OutputListResponse(
         outputs=output_responses,
         total=len(output_responses),
         selected_count=selected_count,
+        liked_count=liked_count,
+        disliked_count=disliked_count,
     )
 
 
@@ -691,7 +699,6 @@ async def create_outputs_batch(
     This enables incremental saving - outputs can be registered as each
     style completes rather than waiting for all generation to finish.
     """
-    # Verify pack exists
     pack_result = await db.execute(select(Pack).where(Pack.id == pack_id))
     pack = pack_result.scalar_one_or_none()
     if not pack:
@@ -716,15 +723,69 @@ async def create_outputs_batch(
         db.add(output)
         created_outputs.append(output)
     
-    await db.flush()  # Get IDs assigned
+    await db.flush()
     
     logger.info(
-        f"Created {len(created_outputs)} outputs for pack {sanitize_for_log(str(pack_id))}"
+        "Created %s outputs for pack %s",
+        len(created_outputs),
+        sanitize_for_log(str(pack_id)),
     )
     
     return OutputBatchCreateResponse(
         created_count=len(created_outputs),
         output_ids=[o.id for o in created_outputs],
+    )
+
+
+@router.post("/{pack_id}/outputs/{output_id}/rate", response_model=OutputRatingResponse)
+async def rate_output(
+    pack_id: uuid.UUID,
+    output_id: uuid.UUID,
+    data: OutputRatingRequest,
+    db: AsyncSession = Depends(get_db),
+) -> OutputRatingResponse:
+    """
+    Rate an output image (thumbs up or thumbs down).
+    
+    This feedback helps improve future generations by:
+    - Learning which styles work best
+    - Improving quality filtering
+    - Understanding user preferences
+    """
+    result = await db.execute(
+        select(Output).where(
+            Output.pack_id == pack_id,
+            Output.id == output_id,
+        )
+    )
+    output = result.scalar_one_or_none()
+    
+    if not output:
+        raise HTTPException(status_code=404, detail="Output not found")
+    
+    output.user_rating = data.rating
+    output.rating_reason = data.reason
+    output.rated_at = datetime.utcnow()
+    
+    await db.flush()
+    
+    sanitized_reason = (
+        (data.reason or "").replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+    )
+    safe_output_id = str(output_id).replace("\r", "").replace("\n", "")
+    logger.info(
+        "Rated output %s %s%s",
+        safe_output_id,
+        "👍" if data.rating else "👎",
+        f" - {sanitized_reason}" if sanitized_reason else "",
+    )
+    
+    return OutputRatingResponse(
+        id=output.id,
+        user_rating=output.user_rating,
+        rating_reason=output.rating_reason,
+        rated_at=output.rated_at,
+        message="Thanks for your feedback!" if data.rating else "Thanks for the feedback - we'll try to improve!",
     )
 
 
