@@ -24,7 +24,10 @@ COPY src/config.py src/
 COPY src/queue.py src/
 COPY src/storage.py src/
 COPY src/metrics.py src/
-COPY src/pipeline/__init__.py src/pipeline/
+
+# Copy minimal pipeline (watermark-only) - use special __init__ that doesn't import GPU modules
+RUN mkdir -p src/pipeline
+COPY src/pipeline/__init__watermark.py src/pipeline/__init__.py
 COPY src/pipeline/watermark_remover.py src/pipeline/
 COPY src/pipeline/slbr_remover.py src/pipeline/
 
