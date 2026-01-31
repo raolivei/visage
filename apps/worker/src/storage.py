@@ -26,6 +26,10 @@ class StorageClient:
         """Initialize S3 client."""
         endpoint_url = f"{'https' if settings.minio_secure else 'http'}://{settings.minio_endpoint}"
         
+        # For self-signed certificates on internal MinIO, disable SSL verification
+        # This is acceptable for internal cluster communication
+        verify_ssl = not settings.minio_secure  # If secure, we have self-signed certs
+        
         self.client = boto3.client(
             "s3",
             endpoint_url=endpoint_url,
@@ -33,8 +37,15 @@ class StorageClient:
             aws_secret_access_key=settings.minio_secret_key,
             config=Config(signature_version="s3v4"),
             region_name="us-east-1",
+            verify=verify_ssl,  # Disable SSL verification for self-signed certs
         )
         self.bucket = settings.minio_bucket
+        
+        if not verify_ssl:
+            # Suppress urllib3 InsecureRequestWarning
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            logger.info(f"MinIO SSL verification disabled (self-signed cert assumed)")
 
     def download_file(self, key: str, local_path: Path) -> Path:
         """

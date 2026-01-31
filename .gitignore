@@ -23,6 +23,12 @@ build/
 *.swo
 .DS_Store
 
+# Worker runtime files
+*.pid
+apps/worker/*.log
+apps/worker/queue-watcher.log
+apps/worker/worker.log
+
 # Build outputs
 .next/
 out/

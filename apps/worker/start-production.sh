@@ -59,5 +59,26 @@ source .venv/bin/activate
 caffeinate -dims &
 echo $! > /tmp/caffeinate.pid
 
-# Start worker
-exec python3 -m src.main
+# Write PID file (use $$ for current shell, will be replaced by exec)
+PID_FILE="$WORKER_DIR/worker.pid"
+
+# Cleanup function
+cleanup() {
+    echo ""
+    echo "🛑 Worker stopping..."
+    rm -f "$PID_FILE" 2>/dev/null
+    kill $(cat /tmp/pf-redis.pid 2>/dev/null) 2>/dev/null
+    kill $(cat /tmp/pf-pushgateway.pid 2>/dev/null) 2>/dev/null
+    kill $(cat /tmp/caffeinate.pid 2>/dev/null) 2>/dev/null
+    exit 0
+}
+trap cleanup SIGINT SIGTERM
+
+# Start worker in background, write PID, then wait
+python3 -m src.main &
+WORKER_PID=$!
+echo $WORKER_PID > "$PID_FILE"
+echo "  📝 PID file: $PID_FILE (PID: $WORKER_PID)"
+
+wait $WORKER_PID
+cleanup
