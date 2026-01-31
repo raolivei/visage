@@ -28,6 +28,7 @@ resources:
   - redis-deployment.yaml # Standalone - replace with Redis Helm chart for HA
   - api-deployment.yaml
   - frontend-deployment.yaml
+  - watermark-worker-deployment.yaml  # CPU-only watermark removal worker
   - ingress.yaml
 
 commonLabels:
@@ -38,4 +39,6 @@ images:
   - name: ghcr.io/raolivei/visage-api
     newTag: latest
   - name: ghcr.io/raolivei/visage-web
+    newTag: latest
+  - name: ghcr.io/raolivei/visage-watermark-worker
     newTag: latest

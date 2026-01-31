@@ -1,0 +1,91 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visage-watermark-worker
+  namespace: visage
+  labels:
+    app.kubernetes.io/name: visage-watermark-worker
+    app.kubernetes.io/part-of: visage
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: visage-watermark-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: visage-watermark-worker
+        app.kubernetes.io/part-of: visage
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+        - name: watermark-worker
+          image: ghcr.io/raolivei/visage-watermark-worker:latest
+          imagePullPolicy: Always
+          env:
+            - name: WORKER_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: REDIS_URL
+              value: "redis://visage-redis:6379/0"
+            - name: MINIO_ENDPOINT
+              value: "visage-minio:9000"
+            - name: MINIO_SECURE
+              value: "false"
+            - name: MINIO_BUCKET
+              value: "visage"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: visage-minio-secret
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: visage-minio-secret
+                  key: secret-key
+            - name: POLL_INTERVAL
+              value: "5.0"
+            - name: DEVICE
+              value: "cpu"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+          livenessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import redis; r = redis.from_url('redis://visage-redis:6379/0'); r.ping()"
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -c
+                - "import redis; r = redis.from_url('redis://visage-redis:6379/0'); r.ping()"
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+      restartPolicy: Always
+      # Prefer scheduling on nodes with more resources
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - arm64
+                      - amd64

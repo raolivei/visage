@@ -1,0 +1,42 @@
+# Visage Watermark Worker - Lightweight CPU-only image
+# Optimized for running watermark removal on ARM64 (Raspberry Pi)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies for OpenCV and image processing
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install only watermark-related Python dependencies
+COPY requirements-watermark.txt .
+RUN pip install --no-cache-dir -r requirements-watermark.txt
+
+# Copy only the necessary source files
+COPY src/__init__.py src/
+COPY src/config.py src/
+COPY src/queue.py src/
+COPY src/storage.py src/
+COPY src/metrics.py src/
+COPY src/pipeline/__init__.py src/pipeline/
+COPY src/pipeline/watermark_remover.py src/pipeline/
+COPY src/pipeline/slbr_remover.py src/pipeline/
+
+# Create a simplified main for watermark-only processing
+COPY src/main_watermark.py src/main.py
+
+# Non-root user
+RUN useradd -m -u 1000 worker
+USER worker
+
+# Default environment
+ENV PYTHONUNBUFFERED=1
+ENV WORKER_ID=visage-watermark-worker
+
+CMD ["python", "-m", "src.main"]
