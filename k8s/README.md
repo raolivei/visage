@@ -243,3 +243,20 @@ kubectl get secrets -n visage
 kubectl get ingress -n visage
 kubectl describe ingress visage-ingress -n visage
 ```
+
+### No endpoints (selector mismatch)
+
+If `kubectl get endpoints -n visage` shows no addresses for one or more services while pods are Running, the service selectors may not match pod labels (e.g. kustomize adds `app.kubernetes.io/managed-by: kustomize` but existing pods don’t have it). Fix by setting selectors to `name` + `part-of` only:
+
+```bash
+# API (if API has no endpoints)
+kubectl get svc visage-api -n visage -o json | jq '.spec.selector = {"app.kubernetes.io/name":"api","app.kubernetes.io/part-of":"visage"}' | kubectl apply -f -
+
+# Postgres, Redis, MinIO, Web (if API crashes with ConnectionRefused to Postgres/Redis, or web/minio have no backends)
+for svc in visage-postgres visage-redis visage-minio visage-web; do
+  name=$(echo $svc | sed 's/visage-//')
+  kubectl get svc $svc -n visage -o json | jq ".spec.selector = {\"app.kubernetes.io/name\":\"$name\",\"app.kubernetes.io/part-of\":\"visage\"}" | kubectl apply -f -
+done
+```
+
+Then restart the API so it can reach Postgres: `kubectl delete pod -n visage -l app.kubernetes.io/name=api`

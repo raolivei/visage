@@ -60,7 +60,8 @@ spec:
                   number: 3000
 ---
 # Public domain (visage.eldertree.xyz) - HTTPS with Cloudflare Origin Certificate
-# Requires: ExternalSecret visage-cloudflare-origin-cert-eldertree synced; Cloudflare SSL Full (strict); DNS
+# DNS managed by Terraform (CNAME to Cloudflare Tunnel), NOT external-dns
+# Requires: ExternalSecret visage-cloudflare-origin-cert-eldertree synced; Cloudflare SSL Full (strict)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -71,7 +72,7 @@ metadata:
     app.kubernetes.io/part-of: visage
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-    external-dns.alpha.kubernetes.io/hostname: visage.eldertree.xyz
+    # NOTE: No external-dns annotation - DNS for *.eldertree.xyz is managed by Terraform (Cloudflare Tunnel CNAME)
 spec:
   ingressClassName: traefik
   tls:
