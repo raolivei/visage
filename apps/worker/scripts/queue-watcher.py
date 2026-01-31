@@ -62,6 +62,10 @@ LOG_FILE = WORKER_DIR / "queue-watcher.log"
 JOBS_QUEUE = "visage:jobs:pending"
 WATERMARK_QUEUE = "visage:watermark:pending"
 
+# Feature flags - which job types to watch for
+WATCH_REGULAR_JOBS = True   # Train/generate jobs (need GPU, Mac only)
+WATCH_WATERMARK_JOBS = False  # Watermark jobs now handled by k8s cluster
+
 # Logging setup
 logging.basicConfig(
     level=logging.INFO,
@@ -89,10 +93,10 @@ def get_redis_client():
 
 
 def get_pending_job_count(r: redis.Redis) -> dict:
-    """Get counts of pending jobs by queue type."""
+    """Get counts of pending jobs by queue type (respects feature flags)."""
     try:
-        jobs_count = r.zcard(JOBS_QUEUE)
-        watermark_count = r.llen(WATERMARK_QUEUE)
+        jobs_count = r.zcard(JOBS_QUEUE) if WATCH_REGULAR_JOBS else 0
+        watermark_count = r.llen(WATERMARK_QUEUE) if WATCH_WATERMARK_JOBS else 0
         return {
             "jobs": jobs_count,
             "watermark": watermark_count,
