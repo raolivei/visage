@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Logo } from "@/components/Logo";
 import { VisageIcon } from "@/components/VisageIcon";
+import { PitangaMark } from "@/components/PitangaMark";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -75,9 +76,21 @@ export default function RootLayout({
                     Self-hosted AI Headshot Generator
                   </span>
                 </div>
-                <p className="text-foreground-tertiary text-sm">
-                  Running on ElderTree
-                </p>
+                <div className="flex items-center gap-4">
+                  <span className="text-foreground-tertiary text-sm">
+                    Running on ElderTree
+                  </span>
+                  <span className="text-foreground-tertiary">·</span>
+                  <a
+                    href="https://pitanga.cloud"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-foreground-tertiary hover:text-foreground-secondary transition-colors text-sm"
+                  >
+                    <PitangaMark className="w-4 h-4" />
+                    <span>Pitanga</span>
+                  </a>
+                </div>
               </div>
             </div>
           </footer>
