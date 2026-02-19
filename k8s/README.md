@@ -60,6 +60,30 @@ kubectl apply -f k8s/frontend-deployment.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
+## Migrations
+
+The API uses `create_all()` on startup and does not alter existing tables. When the `photos` table (or other tables) gain new columns in code, run the matching migration once against the cluster database.
+
+### Running migrations from your Mac (recommended)
+
+1. Port-forward Postgres:
+   ```bash
+   kubectl port-forward -n visage svc/visage-postgres 5432:5432
+   ```
+
+2. Get the database URL from Vault (`secret/visage/database` → `url`) or from the API secret:
+   ```bash
+   kubectl get secret -n visage visage-api -o jsonpath='{.data.database-url}' | base64 -d
+   ```
+   Convert to `psql` form: use `postgresql://` (not `postgresql+asyncpg://`) and replace the host with `localhost` if connecting via port-forward. Example: `postgresql://visage:PASSWORD@localhost:5432/visage`.
+
+3. Run the migration (from the visage repo root):
+   ```bash
+   psql "<connection_string>" -f scripts/migrations/001_photo_watermark_and_validation_columns.sql
+   ```
+
+Migrations in `scripts/migrations/` are idempotent and safe to run multiple times.
+
 ### Rollout after new API image
 
 After CI pushes a new `ghcr.io/raolivei/visage-api:latest`, switch kubectl to the Eldertree cluster and restart the API so pods pull the new image:
