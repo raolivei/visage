@@ -45,10 +45,25 @@ echo "🔍 Verifying connections..."
 redis-cli -p 6379 ping > /dev/null 2>&1 && echo "  ✅ Redis: Connected" || echo "  ❌ Redis: Failed"
 curl -s http://localhost:9091/metrics > /dev/null 2>&1 && echo "  ✅ Pushgateway: Connected" || echo "  ⏭ Pushgateway: skipped"
 
-# Copy production config
+# Build .env from template + secrets from cluster (Vault-synced)
 echo ""
-echo "📝 Using production configuration..."
-cp .env.production .env
+echo "📝 Building production configuration..."
+KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config-eldertree}"
+MINIO_ACCESS_KEY=$(kubectl --kubeconfig="$KUBECONFIG" get secret visage-minio-secret -n visage -o jsonpath='{.data.access-key}' | base64 -d)
+MINIO_SECRET_KEY=$(kubectl --kubeconfig="$KUBECONFIG" get secret visage-minio-secret -n visage -o jsonpath='{.data.secret-key}' | base64 -d)
+
+if [ -z "$MINIO_ACCESS_KEY" ] || [ -z "$MINIO_SECRET_KEY" ]; then
+  echo "  ❌ Failed to fetch MinIO credentials from cluster secret"
+  echo "     Ensure visage-minio-secret exists: kubectl get secret -n visage visage-minio-secret"
+  exit 1
+fi
+
+cp .env.production.template .env
+echo "" >> .env
+echo "# Injected from cluster secret (visage-minio-secret, sourced from Vault)" >> .env
+echo "MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}" >> .env
+echo "MINIO_SECRET_KEY=${MINIO_SECRET_KEY}" >> .env
+echo "  ✅ MinIO credentials injected from Vault → k8s secret"
 
 # Activate venv and start worker
 echo ""
