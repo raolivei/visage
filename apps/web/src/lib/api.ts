@@ -147,10 +147,24 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.detail || `API Error: ${response.status}`);
+      const detail = (error as { detail?: string | string[] }).detail;
+      const msg = Array.isArray(detail) ? detail.join(", ") : detail;
+      throw new Error(msg || `API Error: ${response.status}`);
     }
 
-    return response.json();
+    if (
+      response.status === 204 ||
+      response.headers.get("content-length") === "0"
+    ) {
+      return undefined as T;
+    }
+
+    const text = await response.text();
+    if (!text) {
+      return undefined as T;
+    }
+
+    return JSON.parse(text) as T;
   }
 
   // Health

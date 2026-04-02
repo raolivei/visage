@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Play,
@@ -16,6 +16,7 @@ import {
   Timer,
   ThumbsUp,
   ThumbsDown,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, Pack, Photo, Job, Output } from "@/lib/api";
@@ -52,6 +53,7 @@ function parseProgressInfo(currentStep: string | null): {
 
 export default function PackDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const packId = params.id as string;
 
   const [pack, setPack] = useState<Pack | null>(null);
@@ -61,6 +63,7 @@ export default function PackDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   // Memoize loadPackData to avoid useEffect dependency issues
@@ -94,7 +97,11 @@ export default function PackDetailPage() {
       const hasActiveJob = jobs.some(
         (j) => j.status === "pending" || j.status === "processing" || j.status === "running"
       );
-      const isPackProcessing = pack && ["training", "generating", "filtering", "validating"].includes(pack.status);
+      const isPackProcessing =
+        pack &&
+        ["uploading", "validating", "training", "generating", "filtering"].includes(
+          pack.status,
+        );
       
       if (hasActiveJob || isPackProcessing) {
         loadPackData();
@@ -116,6 +123,29 @@ export default function PackDetailPage() {
       );
     } finally {
       setIsStarting(false);
+    }
+  }
+
+  async function handleDeletePack() {
+    const label = packId.slice(0, 8);
+    if (
+      !window.confirm(
+        `Delete pack #${label}? This permanently removes all photos, trained model data, and generated headshots. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      setDeleting(true);
+      setError(null);
+      await api.deletePack(packId);
+      router.push("/packs");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete pack",
+      );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -182,11 +212,11 @@ export default function PackDetailPage() {
   }
 
   const isProcessing = [
+    "uploading",
+    "validating",
     "training",
     "generating",
     "filtering",
-    "validating",
-    "processing",
   ].includes(pack.status);
   const canStartGeneration =
     pack.status === "uploading" || pack.status === "created" || pack.status === "ready";
@@ -226,7 +256,29 @@ export default function PackDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <button
+            type="button"
+            onClick={handleDeletePack}
+            disabled={
+              deleting ||
+              isProcessing ||
+              !!currentJob
+            }
+            className="btn-secondary inline-flex items-center text-red-400 border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50 disabled:opacity-50"
+            title={
+              isProcessing || currentJob
+                ? "Wait until upload, training, or generation finishes before deleting"
+                : "Permanently delete this pack and all its data"
+            }
+          >
+            {deleting ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <Trash2 className="w-5 h-5 mr-2" />
+            )}
+            Delete pack
+          </button>
           {canStartGeneration && photos.length >= 8 && (
             <button
               onClick={handleStartGeneration}

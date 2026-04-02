@@ -61,7 +61,7 @@ def update_pack_status(pack_id: str, status: str, error: str | None = None):
         if error:
             payload["error_message"] = error
             
-        with httpx.Client(timeout=10.0) as client:
+        with httpx.Client(timeout=10.0, verify=False) as client:
             response = client.patch(
                 f"{settings.api_url}/api/packs/{pack_id}",
                 json=payload,
@@ -197,7 +197,7 @@ def register_outputs_in_database(api_url: str, pack_id: str, job_id: str, output
         return True
     
     try:
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=30.0, verify=False) as client:
             response = client.post(
                 f"{api_url}/api/packs/{pack_id}/outputs/batch",
                 json={
@@ -240,7 +240,7 @@ def sync_job_status_to_db(
         payload["error_message"] = error_message
     
     try:
-        with httpx.Client(timeout=10.0) as client:
+        with httpx.Client(timeout=10.0, verify=False) as client:
             response = client.patch(
                 f"{api_url}/api/packs/{pack_id}/jobs/{job_id}",
                 json=payload,

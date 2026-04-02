@@ -136,7 +136,10 @@ class ImageGenerator:
             
             # Set LoRA scale (0.7-0.8 is usually a good balance)
             # Don't fuse - keep LoRA separate for better stability
-            self.pipe.set_adapters(["default"], adapter_weights=[0.8])
+            # Discover the actual adapter name (may vary: 'default', 'default_0', etc.)
+            active_adapters = list(self.pipe.unet.peft_config.keys()) if hasattr(self.pipe.unet, 'peft_config') else ["default"]
+            adapter_name = active_adapters[0] if active_adapters else "default"
+            self.pipe.set_adapters([adapter_name], adapter_weights=[0.8])
             
             self.current_lora = lora_path_str
             logger.info(f"✅ LoRA loaded with scale 0.8 from {lora_path}")

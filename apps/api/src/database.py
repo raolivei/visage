@@ -4,7 +4,7 @@ Database Configuration
 SQLAlchemy async engine and session management.
 """
 
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
@@ -52,77 +52,52 @@ async def get_db() -> AsyncSession:
             await session.close()
 
 
-# Idempotent migration: ensure photos table has watermark/validation columns.
-# Matches scripts/migrations/001_photo_watermark_and_validation_columns.sql
-_PHOTOS_COLUMNS_MIGRATION = """
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN watermark_removed BOOLEAN DEFAULT FALSE;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN original_s3_key TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN watermark_job_id VARCHAR(36);
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN quality_score FLOAT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN is_valid VARCHAR(20) DEFAULT 'pending';
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN validation_errors JSONB DEFAULT '[]';
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN face_detected VARCHAR(20) DEFAULT 'pending';
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN face_bbox JSONB;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN face_landmarks JSONB;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-DO $$
-BEGIN
-  ALTER TABLE photos ADD COLUMN image_metadata JSONB DEFAULT '{}';
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-"""
+async def _ensure_columns(conn):
+    """Add any model columns missing from existing tables (idempotent).
 
-
-async def _ensure_photos_columns(conn):
-    """Run idempotent migration to add any missing photos columns."""
-    # Each statement is one "DO $$ ... END $$;" block (split strips the "END $$;" suffix)
-    for block in _PHOTOS_COLUMNS_MIGRATION.strip().split("END $$;"):
-        block = block.strip()
-        if not block:
+    create_all() only creates new tables; it never adds columns to existing ones.
+    This inspects every model table and issues ALTER TABLE ADD COLUMN for any column
+    the DB doesn't have yet. Safe to run on every startup -- existing columns are
+    skipped via duplicate_column exception handling.
+    """
+    db_tables = await conn.run_sync(
+        lambda sync_conn: inspect(sync_conn).get_table_names()
+    )
+    for table in Base.metadata.sorted_tables:
+        if table.name not in db_tables:
             continue
-        await conn.execute(text(block + ";"))
+        db_cols = set(
+            await conn.run_sync(
+                lambda sync_conn, t=table.name: {
+                    c["name"] for c in inspect(sync_conn).get_columns(t)
+                }
+            )
+        )
+        for col in table.columns:
+            if col.name in db_cols:
+                continue
+            col_type = col.type.compile(dialect=conn.dialect)
+            stmt = (
+                f"DO $$ BEGIN "
+                f"ALTER TABLE {table.name} ADD COLUMN {col.name} {col_type}"
+            )
+            if col.default is not None and col.default.is_scalar:
+                val = col.default.arg
+                if isinstance(val, bool):
+                    stmt += f" DEFAULT {'TRUE' if val else 'FALSE'}"
+                elif isinstance(val, str):
+                    stmt += f" DEFAULT '{val}'"
+                elif isinstance(val, (int, float)):
+                    stmt += f" DEFAULT {val}"
+            stmt += "; EXCEPTION WHEN duplicate_column THEN NULL; END $$;"
+            await conn.execute(text(stmt))
 
 
 async def init_db():
-    """Initialize database tables and ensure photos columns exist."""
+    """Initialize database tables and ensure all model columns exist."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        await _ensure_photos_columns(conn)
+        await _ensure_columns(conn)
 
 
 async def close_db():

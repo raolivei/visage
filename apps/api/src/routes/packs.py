@@ -225,7 +225,7 @@ async def delete_pack(
     pack_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a pack and all associated data."""
+    """Delete a pack and all associated data (DB rows, S3 objects, Redis job keys)."""
     result = await db.execute(
         select(Pack).where(Pack.id == pack_id)
     )
@@ -234,13 +234,16 @@ async def delete_pack(
     if not pack:
         raise HTTPException(status_code=404, detail="Pack not found")
     
-    # Delete from storage (photos and outputs)
+    job_ids_result = await db.execute(select(Job.id).where(Job.pack_id == pack_id))
+    queue = get_queue_service()
+    for (job_id,) in job_ids_result.all():
+        queue.purge_job_redis(job_id)
+    
     storage = get_storage_service()
     files = storage.list_files(prefix=f"packs/{pack_id}/")
     for file in files:
         storage.delete_file(file["Key"])
     
-    # Delete from database (cascades to photos, jobs, outputs)
     await db.delete(pack)
     
     logger.info("Deleted pack %s", sanitize_for_log(pack_id))

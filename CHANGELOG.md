@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Delete headshot packs**: **Delete pack** on each card footer on **My Packs** (always visible; shows “Delete when idle” while processing) and **Delete pack** on the pack detail page (with confirmation). Deletes PostgreSQL rows, MinIO objects under `packs/{id}/`, and matching Redis job keys. API client handles `204 No Content` responses correctly. Delete is disabled while the pack is uploading, validating, training, generating, or filtering (or while a job is active on the detail page).
+- **Lint**: `npm run lint` uses ESLint directly (Next.js 16 CLI no longer includes `next lint`). Added `.eslintrc.json` extending `next/core-web-vitals`.
+
 #### High Availability Infrastructure (January 2026)
 
 - **GitHub Issues for Full HA Deployment**:

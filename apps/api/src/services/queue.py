@@ -234,6 +234,17 @@ class QueueService:
             logger.error(f"Failed to update progress: {e}")
             return False
 
+    def purge_job_redis(self, job_id: UUID | str) -> None:
+        """Remove a job from Redis queues and delete its keys (e.g. when a pack is deleted)."""
+        jid = str(job_id)
+        try:
+            self.redis.zrem(self.PENDING_QUEUE, jid)
+            self.redis.srem(self.PROCESSING_SET, jid)
+            self.redis.delete(f"{self.QUEUE_PREFIX}:{jid}:data")
+            self.redis.delete(f"{self.QUEUE_PREFIX}:{jid}:logs")
+        except redis.RedisError as e:
+            logger.warning("Failed to purge Redis for job %s: %s", jid, e)
+
     def get_queue_length(self) -> int:
         """Get number of pending jobs."""
         try:
