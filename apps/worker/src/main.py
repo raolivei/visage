@@ -653,6 +653,8 @@ def main():
                     settings.api_url, pack_id, job_id,
                     "completed", progress=100, current_step="Complete"
                 )
+                if pack_id and job_type == "generate":
+                    update_pack_status(pack_id, "completed")
                 
             except Exception as e:
                 error_msg = str(e)

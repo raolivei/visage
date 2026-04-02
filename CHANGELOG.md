@@ -13,9 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Worker**: After a successful **generate** job, PATCH the pack to `completed` so the UI matches finished jobs (previously only failures updated pack status).
+- **Web (My Packs)**: Delete control is at the **top** of each card with the same red `btn-secondary` treatment as the detail page, and pack status is compared case-insensitively. The old placement at the bottom used very low-contrast text when disabled (“Delete when idle”), so it was easy to miss.
+
 ### Added
 
-- **Delete headshot packs**: **Delete pack** on each card footer on **My Packs** (always visible; shows “Delete when idle” while processing) and **Delete pack** on the pack detail page (with confirmation). Deletes PostgreSQL rows, MinIO objects under `packs/{id}/`, and matching Redis job keys. API client handles `204 No Content` responses correctly. Delete is disabled while the pack is uploading, validating, training, generating, or filtering (or while a job is active on the detail page).
+- **Delete headshot packs**: **Delete pack** at the top of each card on **My Packs** (shows “Delete when idle” while processing) and **Delete pack** on the pack detail page (with confirmation). Deletes PostgreSQL rows, MinIO objects under `packs/{id}/`, and matching Redis job keys. API client handles `204 No Content` responses correctly. Delete is disabled while the pack is uploading, validating, training, generating, or filtering (or while a job is active on the detail page).
 - **Lint**: `npm run lint` uses ESLint directly (Next.js 16 CLI no longer includes `next lint`). Added `.eslintrc.json` extending `next/core-web-vitals`.
 
 #### High Availability Infrastructure (January 2026)

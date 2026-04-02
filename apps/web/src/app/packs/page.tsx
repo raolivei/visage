@@ -137,17 +137,44 @@ export default function PacksPage() {
         /* Pack grid */
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {packs.map((pack) => {
+            const statusKey = (pack.status || "").toLowerCase();
             const status =
-              statusConfig[pack.status as keyof typeof statusConfig] ||
+              statusConfig[statusKey as keyof typeof statusConfig] ||
               statusConfig.created;
             const StatusIcon = status.icon;
-            const isProcessing = PROCESSING_STATUSES.includes(pack.status);
+            const isProcessing = PROCESSING_STATUSES.includes(statusKey);
 
             return (
               <div
                 key={pack.id}
                 className="glass-card p-6 hover:border-accent-500/30 transition-all group flex flex-col"
               >
+                <div className="flex justify-end mb-3">
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeletePack(pack, e)}
+                    disabled={deletingId === pack.id || isProcessing}
+                    className={cn(
+                      "btn-secondary inline-flex items-center gap-2 text-sm shrink-0",
+                      "text-red-400 border-red-500/40 hover:bg-red-500/10 hover:border-red-500/60",
+                      (isProcessing || deletingId === pack.id) &&
+                        "opacity-55 cursor-not-allowed hover:bg-transparent",
+                    )}
+                    title={
+                      isProcessing
+                        ? "Wait until this pack finishes processing before deleting"
+                        : "Permanently delete this pack and all its data"
+                    }
+                    aria-label={`Delete pack ${pack.id.slice(0, 8)}`}
+                  >
+                    {deletingId === pack.id ? (
+                      <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 shrink-0" />
+                    )}
+                    {isProcessing ? "Delete when idle" : "Delete pack"}
+                  </button>
+                </div>
                 <a
                   href={`/packs/${pack.id}`}
                   className="block flex-1 min-w-0"
@@ -210,32 +237,6 @@ export default function PacksPage() {
                   )}
                 </div>
                 </a>
-                <div className="mt-4 pt-3 border-t border-visage-800 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeletePack(pack, e)}
-                    disabled={deletingId === pack.id || isProcessing}
-                    className={cn(
-                      "inline-flex items-center gap-2 text-sm font-medium rounded-lg px-3 py-2 transition-colors",
-                      isProcessing || deletingId === pack.id
-                        ? "text-visage-500 cursor-not-allowed"
-                        : "text-red-400 hover:text-red-300 hover:bg-red-500/10",
-                    )}
-                    title={
-                      isProcessing
-                        ? "Wait until this pack finishes processing before deleting"
-                        : "Permanently delete this pack and all its data"
-                    }
-                    aria-label={`Delete pack ${pack.id.slice(0, 8)}`}
-                  >
-                    {deletingId === pack.id ? (
-                      <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4 shrink-0" />
-                    )}
-                    {isProcessing ? "Delete when idle" : "Delete pack"}
-                  </button>
-                </div>
               </div>
             );
           })}
