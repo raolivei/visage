@@ -1,12 +1,28 @@
+# DEPRECATED - 2026-05-04
+#
+# This static provisioning file is no longer used.
+# Dashboards are now managed via Helm in pi-fleet/helm/monitoring-stack
+#
+# Migration completed:
+# - visage-operations.json → pi-fleet/helm/monitoring-stack/dashboards/
+# - visage-training.json → pi-fleet/helm/monitoring-stack/dashboards/
+# - Folder mapping: "Applications/Visage" (was "Visage")
+#
+# See: pi-fleet/helm/monitoring-stack/README-DASHBOARDS.md
+# See: visage/monitoring/grafana/README-MIGRATION.md
+#
+# ---
+# Previous configuration (kept for reference):
+# ---
 # Grafana dashboard provisioning
-apiVersion: 1
-
-providers:
-  - name: "Visage Dashboards"
-    orgId: 1
-    folder: "Visage"
-    type: file
-    disableDeletion: false
-    editable: true
-    options:
-      path: /var/lib/grafana/dashboards
+# apiVersion: 1
+#
+# providers:
+#   - name: "Visage Dashboards"
+#     orgId: 1
+#     folder: "Visage"
+#     type: file
+#     disableDeletion: false
+#     editable: true
+#     options:
+#       path: /var/lib/grafana/dashboards
