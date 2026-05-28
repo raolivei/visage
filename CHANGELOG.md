@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Archived
+
+- **2026-04-02** — Project archived; no active Eldertree deployment. Repository read-only on GitHub. CI image builds are `workflow_dispatch` only. See [ARCHIVED.md](ARCHIVED.md).
+
 ### Fixed
 
 - **Worker**: After a successful **generate** job, PATCH the pack to `completed` so the UI matches finished jobs (previously only failures updated pack status).

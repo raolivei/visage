@@ -1,18 +1,7 @@
 name: Build Watermark Worker
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/worker/src/pipeline/watermark_remover.py"
-      - "apps/worker/src/pipeline/slbr_remover.py"
-      - "apps/worker/src/main_watermark.py"
-      - "apps/worker/src/queue.py"
-      - "apps/worker/src/storage.py"
-      - "apps/worker/src/config.py"
-      - "apps/worker/Dockerfile.watermark"
-      - "apps/worker/requirements-watermark.txt"
-      - ".github/workflows/build-watermark-worker.yml"
+  # Archived 2026-04 — manual builds only
   workflow_dispatch:
 
 concurrency:

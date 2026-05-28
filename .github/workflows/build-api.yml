@@ -12,17 +12,7 @@
 name: Build API
 
 on:
-  push:
-    branches: [main, dev]
-    tags: ["v*"]
-    paths:
-      - "apps/api/**"
-      - ".github/workflows/build-api.yml"
-      - "VERSION"
-  pull_request:
-    branches: [main]
-    paths:
-      - "apps/api/**"
+  # Archived 2026-04 — manual builds only
   workflow_dispatch:
     inputs:
       tag:

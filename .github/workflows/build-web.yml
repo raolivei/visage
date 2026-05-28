@@ -12,17 +12,7 @@
 name: Build Web
 
 on:
-  push:
-    branches: [main, dev]
-    tags: ["v*"]
-    paths:
-      - "apps/web/**"
-      - ".github/workflows/build-web.yml"
-      - "VERSION"
-  pull_request:
-    branches: [main]
-    paths:
-      - "apps/web/**"
+  # Archived 2026-04 — manual builds only
   workflow_dispatch:
     inputs:
       tag:

@@ -1,5 +1,7 @@
 # Visage
 
+> **ARCHIVED (2026-04-02)** — This project is **read-only** and no longer maintained. Code, `k8s/`, and docs are preserved for reference. Eldertree deployment is retired (optional namespace teardown). See [ARCHIVED.md](ARCHIVED.md). Demotion runbook: `workspace-config/docs/PROJECT_DECOMMISSIONING.md` in the [raolivei workspace](https://github.com/raolivei).
+
 [![CI](https://github.com/raolivei/visage/actions/workflows/ci.yml/badge.svg)](https://github.com/raolivei/visage/actions/workflows/ci.yml)
 [![Security Scanning](https://github.com/raolivei/visage/actions/workflows/security-scan.yml/badge.svg)](https://github.com/raolivei/visage/actions/workflows/security-scan.yml)
 [![Build API](https://github.com/raolivei/visage/actions/workflows/build-api.yml/badge.svg)](https://github.com/raolivei/visage/actions/workflows/build-api.yml)
